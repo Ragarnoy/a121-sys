@@ -1,7 +1,3 @@
-Here's the revised `README.md` section for the `a121-sys` crate, specifically highlighting only the `distance` and `presence` features in the context of raw bindings for the Acconeer A121 radar sensor.
-
----
-
 # a121-sys
 
 [![docs.rs](https://docs.rs/a121-sys/badge.svg)](https://docs.rs/a121-sys)
