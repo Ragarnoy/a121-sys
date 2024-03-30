@@ -32,7 +32,7 @@
 //!
 //! ```no_run
 //! use core::ffi::c_char;
-//! 
+//!
 //! #[no_mangle]
 //! pub extern "C" fn rust_log(level: u32, message: *const c_char) {
 //!     // Your logging implementation here
@@ -40,10 +40,8 @@
 //! ```
 //!
 
-
 use core::concat;
 use core::env;
 use core::include;
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-
