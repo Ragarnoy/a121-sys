@@ -66,9 +66,3 @@ We welcome contributions to expand and improve `a121-sys`. Whether it's adding n
 ## License
 
 Distributed under the MIT License. See [LICENSE](https://github.com/Ragarnoy/a121-rs/LICENSE) for more information.
-
----
-
-This README version is adapted to specifically highlight the `distance` and `presence` features within the `a121-sys` crate, aligning with the requirements for focusing on these two features.
-
-[Documentation](https://docs.askthecode.ai) | [Github](https://github.com/askthecode/documentation) | [Twitter](https://twitter.com/askthecode_ai)

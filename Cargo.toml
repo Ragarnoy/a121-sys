@@ -1,6 +1,6 @@
 [package]
 name = "a121-sys"
-description = "Rust driver for the Acconeer A121 radar sensor"
+description = "Raw bindings to the A121 radar sensor C SDK"
 authors = ["Ragarnoy <tiagolernould@gmail.com>"]
 keywords = ["embedded", "a121", "radar"]
 repository = "https://github.com/Ragarnoy/a121-sys"
@@ -9,7 +9,7 @@ categories = ["embedded", "no-std"]
 readme = "README.md"
 license = "MIT"
 edition = "2021"
-version = "0.1.0"
+version = "0.1.1"
 rust-version = "1.75"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -23,3 +23,8 @@ cc = "1.0"
 [features]
 distance = []
 presence = []
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"

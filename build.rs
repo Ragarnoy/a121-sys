@@ -80,6 +80,7 @@ fn generate_bindings(rss_path: &Path) -> Result<(), String> {
             }
         }
     }
+    bindings = c_log_wrapper(bindings);
 
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     bindings
@@ -89,4 +90,17 @@ fn generate_bindings(rss_path: &Path) -> Result<(), String> {
         .map_err(|_| "Unable to write bindings to file".to_string())
         .expect("Unable to write bindings to file");
     Ok(())
+}
+
+fn c_log_wrapper(mut bindings: bindgen::Builder) -> bindgen::Builder {
+    cc::Build::new()
+        .file("c_src/logging.c")
+        .include("c_src")
+        .warnings_into_errors(true)
+        .extra_warnings(true)
+        .compile("log");
+    println!("cargo:rerun-if-changed=c_src/logging.c");
+    println!("cargo:rustc-link-lib=static=log");
+    bindings = bindings.header("c_src/logging.h");
+    bindings
 }
