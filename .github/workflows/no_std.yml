@@ -1,0 +1,52 @@
+# This workflow checks the `a121-sys` crate for `no_std` compatibility.
+# It ensures that the crate can be compiled in a `no_std` environment, which is
+# essential for embedded applications.
+# See check.yml for details on concurrency cancellation and workflow triggering.
+permissions:
+  contents: read
+on:
+  push:
+    branches: [main]
+  pull_request:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+name: no_std_check
+
+env:
+  CPATH: "/usr/lib/arm-none-eabi/include"
+
+jobs:
+  compile_no_std:
+    runs-on: ubuntu-latest
+    name: Compile no_std ${{ matrix.target }}
+    strategy:
+      matrix:
+        target: [thumbv7em-none-eabihf]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Setup Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          target: ${{ matrix.target }}
+
+      - name: Install ARM GCC and Clang
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi clang
+
+      - name: Add target for no_std build
+        uses: actions-rs/target@v1
+        with:
+          target: ${{ matrix.target }}
+
+      - name: Check build for no_std compatibility
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --target ${{ matrix.target }} --no-default-features
