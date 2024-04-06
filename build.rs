@@ -61,7 +61,7 @@ fn generate_bindings(rss_path: &Path) -> Result<(), String> {
     let mut bindings = bindgen::Builder::default()
         .use_core()
         .clang_arg(format!("-I{}", headers.display()))
-        .layout_tests(false)
+        .layout_tests(true)
         .generate_cstr(true);
 
     for entry in
