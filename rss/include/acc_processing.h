@@ -1,4 +1,4 @@
-// Copyright (c) Acconeer AB, 2020-2023
+// Copyright (c) Acconeer AB, 2020-2024
 // All rights reserved
 
 #ifndef ACC_PROCESSING_H_
@@ -145,6 +145,26 @@ float acc_processing_points_to_meter(int32_t points);
  * @return The corresponding length in points
  */
 int32_t acc_processing_meter_to_points(float length);
+
+
+/**
+ * @brief Calculate temperature compensation for mean sweep and background noise
+ *        (tx off) standard deviation
+ *
+ * The signal adjustment model follows 2 ** (temperature_diff / model_parameter), where
+ * model_parameter reflects the temperature difference relative the reference temperature,
+ * required for the amplitude to double/halve.
+ *
+ * The noise adjustment is a linear function of the temperature difference, calibrated using
+ * noise-normalized data, generalizing to different sensor configurations.
+ *
+ * @param[in] temperature_diff Diff between actual and reference temperature
+ * @param[in] profile Configured profile
+ * @param[out] signal_adjust_factor The calculated signal adjustment factor
+ * @param[out] noise_adjust_factor The calculated noise adjustment factor
+ */
+void acc_processing_get_temperature_adjustment_factors(int16_t temperature_diff, acc_config_profile_t profile, float *signal_adjust_factor,
+                                                       float *noise_adjust_factor);
 
 
 /**

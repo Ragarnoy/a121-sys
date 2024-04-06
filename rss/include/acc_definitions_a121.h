@@ -31,7 +31,7 @@
  */
 typedef struct
 {
-	uint8_t data[ACC_CAL_RESULT_DATA_SIZE];
+	uint32_t data[ACC_CAL_RESULT_DATA_SIZE / 4];
 } acc_cal_result_t;
 
 /**
