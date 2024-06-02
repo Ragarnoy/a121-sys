@@ -18,7 +18,9 @@ fn main() {
     setup_linking(&lib_path); // Now always called regardless of stubs or actual libs
     rerun_if_changed(&rss_path);
     check_headers_existence(&rss_path);
-    generate_bindings(&rss_path).expect("Unable to generate bindings");
+    generate_bindings(&rss_path)
+        .map_err(|e| panic!("{}", e))
+        .unwrap();
 }
 
 fn run_python_script(rss_path: &Path) {
