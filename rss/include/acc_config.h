@@ -1,4 +1,4 @@
-// Copyright (c) Acconeer AB, 2020-2023
+// Copyright (c) Acconeer AB, 2020-2024
 // All rights reserved
 
 #ifndef ACC_CONFIG_H_
@@ -107,6 +107,16 @@ uint16_t acc_config_num_points_get(const acc_config_t *config);
  *
  * Sampling produces complex (IQ) data points with configurable distance spacing,
  * starting from ~2.5mm.
+ *
+ * The step length has the following constraints:
+ * if step_length <= 24:
+ *   24 % step_length == 0
+ *
+ * if step_length > 24:
+ *   step_length % 24 == 0
+ *
+ * This leads to the following valid values:
+ * 1, 2, 3, 4, 6, 8, 12, 24, 48, 72 ...
  *
  * @param[in] config The configuration
  * @param[in] step_length The step length

@@ -1,4 +1,4 @@
-// Copyright (c) Acconeer AB, 2022-2023
+// Copyright (c) Acconeer AB, 2022-2024
 // All rights reserved
 
 #ifndef ACC_DETECTOR_PRESENCE_H_
@@ -99,9 +99,16 @@ typedef struct
 	 */
 	float start_m;
 	/**
+	 * Actual end point of measurement in m.
+	 * This can be useful to know the exact end point of the measurement in m.
+	 * The resolution of each point is approximately 2.5mm
+	 */
+	float end_m;
+	/**
 	 * Actual step length between each data point of the measurement in m.
 	 * This can be useful when automatic selection of step length based on the profile
 	 * is enabled through @ref acc_detector_presence_config_auto_step_length_set
+	 * NOTE! Only valid if automatic_subsweeps is disabled
 	 */
 	float step_length_m;
 	/**
@@ -115,6 +122,7 @@ typedef struct
 	 * Profile used.
 	 * This can be useful when automatic selection of profile based on start point
 	 * is enabled through @ref acc_detector_presence_config_auto_profile_set
+	 * NOTE! Only valid if automatic_subsweeps is disabled
 	 */
 	acc_config_profile_t profile;
 } acc_detector_presence_metadata_t;
@@ -141,7 +149,7 @@ void acc_detector_presence_config_destroy(acc_detector_presence_config_t *presen
  *
  * @param[in] presence_config The configuration to log
  */
-void acc_detector_presence_config_log(const acc_detector_presence_config_t *presence_config);
+void acc_detector_presence_config_log(acc_detector_presence_config_t *presence_config);
 
 
 /**
@@ -195,7 +203,7 @@ void acc_detector_presence_destroy(acc_detector_presence_handle_t *presence_hand
  *            from @ref acc_detector_presence_get_buffer_size
  * @return true if successful, false otherwise
  */
-bool acc_detector_presence_prepare(acc_detector_presence_handle_t *presence_handle, acc_detector_presence_config_t *presence_config,
+bool acc_detector_presence_prepare(const acc_detector_presence_handle_t *presence_handle, acc_detector_presence_config_t *presence_config,
                                    acc_sensor_t *sensor, const acc_cal_result_t *cal_result, void *buffer, uint32_t buffer_size);
 
 
@@ -263,6 +271,8 @@ float acc_detector_presence_config_end_get(const acc_detector_presence_config_t 
  * Sampling produces complex (IQ) data points with configurable distance spacing,
  * starting from ~2.5mm.
  *
+ * NOTE! Only used if automatic_subsweeps is set to false
+ *
  * @param[in] presence_config The configuration
  * @param[in] step_length The step length
  */
@@ -286,6 +296,8 @@ uint16_t acc_detector_presence_config_step_length_get(const acc_detector_presenc
  * The highest possible step length based on the fwhm of the set profile
  * with the goal to achieve detection on the complete range with minimum number
  * of sampling points
+ *
+ * NOTE! Only used if automatic_subsweeps is set to false
  *
  * @param[in] presence_config The configuration
  * @param[in] enable true to enable auto selection, false to disable
@@ -314,6 +326,8 @@ bool acc_detector_presence_config_auto_step_length_get(const acc_detector_presen
  * The set profile will only be used if profile auto selection was disabled
  * through @ref acc_detector_presence_config_auto_profile_set
  *
+ * NOTE! Only used if automatic_subsweeps is set to false
+ *
  * @param[in] presence_config The configuration
  * @param[in] profile The profile to set
  */
@@ -335,6 +349,8 @@ acc_config_profile_t acc_detector_presence_config_profile_get(const acc_detector
  * @brief Enable automatic selection of profile based on start point of measurement
  *
  * The highest possible profile without interference of direct leakage will used to maximize SNR
+ *
+ * NOTE! Only used if automatic_subsweeps is set to false
  *
  * @param[in] presence_config The configuration
  * @param[in] enable true to enable auto selection, false to disable
@@ -764,6 +780,58 @@ void acc_detector_presence_config_inter_output_time_const_set(acc_detector_prese
  * @return time constant in s
  */
 float acc_detector_presence_config_inter_output_time_const_get(const acc_detector_presence_config_t *presence_config);
+
+
+/**
+ * @brief Set if automatic subsweeps should be used
+ *
+ * Enabling subsweeps will make the presence detector utilize subsweeps.
+ * This will automatically optimize settings for the selected range.
+ * This setting will disable other settings and automatically overwrite their values.
+ *
+ * @param[in] presence_config The configuration to set enable automatic subsweeps for
+ * @param[in] automatic_subsweeps Enable automatic subsweeps setting, true will enable the setting
+ */
+void acc_detector_presence_config_automatic_subsweeps_set(acc_detector_presence_config_t *presence_config, bool automatic_subsweeps);
+
+
+/**
+ * @brief Get if automatic subsweeps should be used
+ *
+ * @param[in] presence_config The configuration to get enable automatic subsweeps for
+ * @return Enable automatic subsweeps, true if enabled.
+ */
+bool acc_detector_presence_config_automatic_subsweeps_get(const acc_detector_presence_config_t *presence_config);
+
+
+/**
+ * @brief Set signal quality
+ *
+ * Only used if automatic subsweeps is enabled.
+ *
+ * @param[in] presence_config The configuration to set signal quality for
+ * @param[in] signal_quality Signal quality to use
+ */
+void acc_detector_presence_config_signal_quality_set(acc_detector_presence_config_t *presence_config, float signal_quality);
+
+
+/**
+ * @brief Get signal quality
+ *
+ * @param[in] presence_config The configuration to get signal quality for
+ * @return Signal quality
+ */
+float acc_detector_presence_config_signal_quality_get(const acc_detector_presence_config_t *presence_config);
+
+
+/**
+ * @brief Calculate distance in meter for a point in a sweep (including subsweeps)
+ *
+ * @param[in] presence_handle The presence detector handle
+ * @param[in] point_idx Index for distance point in sweep
+ * @return Distance in meters
+ */
+float acc_detector_presence_get_distance_m(const acc_detector_presence_handle_t *presence_handle, uint16_t point_idx);
 
 
 /**
