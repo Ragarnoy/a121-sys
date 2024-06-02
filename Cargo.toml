@@ -9,7 +9,7 @@ categories = ["embedded", "no-std"]
 readme = "README.md"
 license = "MIT"
 edition = "2021"
-version = "0.1.2"
+version = "0.3.0"
 rust-version = "1.75"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -21,6 +21,7 @@ bindgen = { version = "0.69" }
 cc = "1.0"
 
 [features]
+stub_library = []
 distance = []
 presence = []
 

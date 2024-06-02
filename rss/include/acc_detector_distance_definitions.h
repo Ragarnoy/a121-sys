@@ -1,4 +1,4 @@
-// Copyright (c) Acconeer AB, 2022-2023
+// Copyright (c) Acconeer AB, 2022-2024
 // All rights reserved
 
 #ifndef ACC_DETECTOR_DISTANCE_DEFINITIONS_H_
@@ -18,7 +18,7 @@
  */
 typedef struct
 {
-	uint8_t data[ACC_DETECTOR_CAL_RESULT_DYNAMIC_DATA_SIZE];
+	uint32_t data[ACC_DETECTOR_CAL_RESULT_DYNAMIC_DATA_SIZE / 4];
 } acc_detector_cal_result_dynamic_t;
 
 

@@ -1,4 +1,4 @@
-// Copyright (c) Acconeer AB, 2020-2023
+// Copyright (c) Acconeer AB, 2020-2024
 // All rights reserved
 
 #ifndef ACC_PROCESSING_H_
@@ -145,6 +145,54 @@ float acc_processing_points_to_meter(int32_t points);
  * @return The corresponding length in points
  */
 int32_t acc_processing_meter_to_points(float length);
+
+
+/**
+ * @brief Calculate temperature compensation for mean sweep and background noise
+ *        (tx off) standard deviation
+ *
+ * The signal adjustment models how the amplitude level fluctuates with temperature.
+ * If the same object is measured against while the temperature changes,
+ * the amplitude level should be multiplied with this factor.
+ *
+ * Example of usage:
+ * int16_t reference_temperature (recorded temperature during calibration)
+ * float reference_amplitude (recorded amplitude during calibration)
+ *
+ * int16_t current_temperature (temperature at current measurement time)
+ *
+ * float signal_adjust_factor
+ * float deviation_adjust_factor
+ *
+ * acc_processing_get_temperature_adjustment_factors(reference_temperature, current_temperature, profile,
+ *                                                   &signal_adjust_factor, &deviation_adjust_factor)
+ *
+ * reference_amplitude_new = reference_amplitude * signal_adjust_factor
+ *
+ * The reference_amplitude_new is an approximation of what the calibrated amplitude
+ * would be at the new temperature.
+ *
+ * Eg. When the temperature falls 60 degrees, the amplitude (roughly) doubles.
+ * This yields a signal_adjust_factor of (about) 2.
+ *
+ * The signal adjustment model follows 2 ^ -(temperature_diff / model_parameter), where
+ * model_parameter reflects the temperature difference relative the reference temperature,
+ * required for the amplitude to double/halve.
+ *
+ * The deviation_adjust_factor works the same way, but is applied to a measurement
+ * taken with the Tx off. So instead of a measurement of amplitude, we have a measurement of tx_off.
+ * The procedure for calculating this is to take the same configuration as
+ * the application will use, but turning off the Tx.
+ * This calibration value is multiplied with the deviation_adjust_factor.
+ *
+ * @param[in] reference_temperature The reference temperature, usually taken at calibration
+ * @param[in] current_temperature The current temperature
+ * @param[in] profile Configured profile
+ * @param[out] signal_adjust_factor The calculated signal adjustment factor
+ * @param[out] deviation_adjust_factor The calculated deviation adjustment factor
+ */
+void acc_processing_get_temperature_adjustment_factors(int16_t reference_temperature, int16_t current_temperature, acc_config_profile_t profile,
+                                                       float *signal_adjust_factor, float *deviation_adjust_factor);
 
 
 /**

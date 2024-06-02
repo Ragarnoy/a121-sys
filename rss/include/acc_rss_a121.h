@@ -1,4 +1,4 @@
-// Copyright (c) Acconeer AB, 2021-2023
+// Copyright (c) Acconeer AB, 2021-2024
 // All rights reserved
 
 #ifndef ACC_RSS_A121_H_
@@ -161,7 +161,7 @@ void acc_rss_assembly_test_destroy(acc_rss_assembly_test_t *assembly_test);
 
 
 /**
- * @brief Enable disagnostic logs for the assembly test,
+ * @brief Enable diagnostic logs for the assembly test,
  */
 void acc_rss_assembly_test_enable_diagnostic_logs(void);
 
