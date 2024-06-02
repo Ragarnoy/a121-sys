@@ -21,6 +21,7 @@ bindgen = { version = "0.69" }
 cc = "1.0"
 
 [features]
+stub_library = []
 distance = []
 presence = []
 

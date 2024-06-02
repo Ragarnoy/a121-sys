@@ -2,17 +2,77 @@ use std::env;
 use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::Command;
+
 
 fn main() {
-    let acc_rss_libs =
-        get_acc_rss_libs_path().expect("Error determining Acconeer static libs path");
     let rss_path = get_rss_path().expect("Error determining rss directory path");
+    let lib_path = if cfg!(feature = "stub_library") {
+        let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
+        run_python_script(&rss_path);
+        generate_stub_libraries(&rss_path, &out_dir);
+        out_dir
+    } else {
+        get_acc_rss_libs_path().expect("Error determining Acconeer static libs path")
+    };
 
-    setup_linking(&acc_rss_libs);
+    setup_linking(&lib_path);  // Now always called regardless of stubs or actual libs
     rerun_if_changed(&rss_path);
     check_headers_existence(&rss_path);
-
     generate_bindings(&rss_path).expect("Unable to generate bindings");
+}
+
+fn run_python_script(rss_path: &Path) {
+    Command::new("python")
+        .arg(rss_path.join("generate_bindings.py").to_str().unwrap())
+        .status()
+        .expect("Failed to run Python script for generating bindings");
+}
+
+fn generate_stub_libraries(rss_path: &Path, out_dir: &Path) {
+    compile_and_archive(out_dir, rss_path, "acconeer_a121_stubs.c", "acconeer_a121_stubs.o", "libacconeer_a121.a");
+
+    if cfg!(feature = "distance") {
+        compile_and_archive(out_dir, rss_path, "acc_detector_distance_a121_stubs.c", "acc_detector_distance_a121_stubs.o", "libacc_detector_distance_a121.a");
+    }
+
+    if cfg!(feature = "presence") {
+        compile_and_archive(out_dir, rss_path, "acc_detector_presence_a121_stubs.c", "acc_detector_presence_a121_stubs.o", "libacc_detector_presence_a121.a");
+    }
+}
+
+fn compile_and_archive(out_dir: &Path, rss_path: &Path, source_file: &str, obj_file_name: &str, lib_name: &str) {
+    let source_path = rss_path.join(source_file);
+    let obj_path = out_dir.join(obj_file_name);
+    let lib_path = out_dir.join(lib_name);
+
+    Command::new("arm-none-eabi-gcc")
+        .args(["-c", source_path.to_str().unwrap(), "-o", obj_path.to_str().unwrap(),
+            "-I", rss_path.join("include").to_str().unwrap(),
+            "-mcpu=cortex-m4", "-mthumb", "-mfloat-abi=hard", "-mfpu=fpv4-sp-d16",
+            "-DTARGET_ARCH_cm4", "-DFLOAT_ABI_HARD", "-std=c99", "-MMD", "-MP",
+            "-O2", "-g", "-fno-math-errno", "-ffunction-sections", "-fdata-sections",
+            "-flto=auto", "-ffat-lto-objects"])
+        .status()
+        .expect("Failed to compile C source file");
+
+    Command::new("ar")
+        .args(["rcs", lib_path.to_str().unwrap(), obj_path.to_str().unwrap()])
+        .status()
+        .expect("Failed to create static library");
+}
+
+fn setup_linking(lib_path: &Path) {
+    println!("cargo:rustc-link-search=native={}", lib_path.display());
+    println!("cargo:rustc-link-lib=static=acconeer_a121");
+
+    if cfg!(feature = "distance") {
+        println!("cargo:rustc-link-lib=static=acc_detector_distance_a121");
+    }
+
+    if cfg!(feature = "presence") {
+        println!("cargo:rustc-link-lib=static=acc_detector_presence_a121");
+    }
 }
 
 fn get_acc_rss_libs_path() -> Result<PathBuf, String> {
@@ -25,34 +85,17 @@ fn get_acc_rss_libs_path() -> Result<PathBuf, String> {
 fn get_rss_path() -> Result<PathBuf, String> {
     PathBuf::from("rss")
         .canonicalize()
-        .map_err(|_| "rss directory not found".to_string())
-}
-
-fn setup_linking(acc_rss_libs: &Path) {
-    println!("cargo:rustc-link-search={}", acc_rss_libs.display());
-    println!("cargo:rustc-link-lib=static=acconeer_a121");
-
-    if cfg!(feature = "distance") {
-        println!("cargo:rustc-link-lib=static=acc_detector_distance_a121");
-    }
-    if cfg!(feature = "presence") {
-        println!("cargo:rustc-link-lib=static=acc_detector_presence_a121");
-    }
-
-    eprintln!("ACC_RSS_LIBS: {}", acc_rss_libs.to_str().unwrap());
+        .map_err(|_| "RSS directory not found".to_string())
 }
 
 fn rerun_if_changed(rss_path: &Path) {
-    println!(
-        "cargo:rerun-if-changed={}",
-        rss_path.join("include").display()
-    );
+    println!("cargo:rerun-if-changed={}", rss_path.join("include").display());
 }
 
 fn check_headers_existence(rss_path: &Path) {
     let headers = rss_path.join("include");
     if !headers.exists() {
-        panic!("headers not found");
+        panic!("Headers not found");
     }
 }
 
