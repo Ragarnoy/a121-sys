@@ -27,17 +27,27 @@ fn main() {
 }
 
 fn run_python_script(rss_path: &Path) {
-    eprintln!(
-        "Running Python script for generating bindings {:?}",
-        rss_path.join("generate_bindings.py")
-    );
-    let script = include_str!("./rss/generate_bindings.py");
-    Command::new("python")
+    let script_path = rss_path.join("generate_bindings.py");
+    if !script_path.exists() {
+        panic!(
+            "Expected Python script does not exist at: {}",
+            script_path.display()
+        );
+    }
+
+    let output = Command::new("python3")
         .current_dir(rss_path)
-        .arg("-c")
-        .arg(script)
-        .status()
+        .arg("generate_bindings.py")
+        .output()
         .expect("Failed to run Python script for generating bindings");
+
+    if !output.status.success() {
+        eprintln!(
+            "Python script failed with output:\n{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        panic!("Python script execution failed");
+    }
 }
 
 fn generate_stub_libraries(rss_path: &Path, out_dir: &Path) {
@@ -109,7 +119,7 @@ fn compile_and_archive(
         .status()
         .expect("Failed to compile C source file");
 
-    Command::new("ar")
+    Command::new("arm-none-eabi-ar")
         .args([
             "rcs",
             lib_path.to_str().unwrap(),
@@ -120,6 +130,15 @@ fn compile_and_archive(
 }
 
 fn setup_linking(lib_path: &Path) {
+    if cfg!(feature = "stub_library") {
+        println!("cargo:rustc-linker=arm-none-eabi-gcc");
+        // pass flags to the linker
+        println!("cargo:rustc-link-arg=-mcpu=cortex-m4");
+        println!("cargo:rustc-link-arg=-mthumb");
+        println!("cargo:rustc-link-arg=-mfloat-abi=hard");
+        println!("cargo:rustc-link-arg=-mfpu=fpv4-sp-d16");
+    }
+
     println!("cargo:rustc-link-search=native={}", lib_path.display());
     println!("cargo:rustc-link-lib=static=acconeer_a121");
 
