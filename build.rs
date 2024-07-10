@@ -5,7 +5,10 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 fn main() {
-    let rss_path = get_rss_path().expect("Error determining rss directory path");
+    let rss_path = get_rss_path()
+        .expect("Error determining rss directory path")
+        .canonicalize()
+        .unwrap();
     let lib_path = if cfg!(feature = "stub_library") {
         let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
         run_python_script(&rss_path);
@@ -24,10 +27,27 @@ fn main() {
 }
 
 fn run_python_script(rss_path: &Path) {
-    Command::new("python")
-        .arg(rss_path.join("generate_bindings.py").to_str().unwrap())
-        .status()
+    let script_path = rss_path.join("generate_bindings.py");
+    if !script_path.exists() {
+        panic!(
+            "Expected Python script does not exist at: {}",
+            script_path.display()
+        );
+    }
+
+    let output = Command::new("python3")
+        .current_dir(rss_path)
+        .arg("generate_bindings.py")
+        .output()
         .expect("Failed to run Python script for generating bindings");
+
+    if !output.status.success() {
+        eprintln!(
+            "Python script failed with output:\n{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        panic!("Python script execution failed");
+    }
 }
 
 fn generate_stub_libraries(rss_path: &Path, out_dir: &Path) {
@@ -99,7 +119,7 @@ fn compile_and_archive(
         .status()
         .expect("Failed to compile C source file");
 
-    Command::new("ar")
+    Command::new("arm-none-eabi-ar")
         .args([
             "rcs",
             lib_path.to_str().unwrap(),
@@ -110,6 +130,15 @@ fn compile_and_archive(
 }
 
 fn setup_linking(lib_path: &Path) {
+    if cfg!(feature = "stub_library") {
+        println!("cargo:rustc-linker=arm-none-eabi-gcc");
+        // pass flags to the linker
+        println!("cargo:rustc-link-arg=-mcpu=cortex-m4");
+        println!("cargo:rustc-link-arg=-mthumb");
+        println!("cargo:rustc-link-arg=-mfloat-abi=hard");
+        println!("cargo:rustc-link-arg=-mfpu=fpv4-sp-d16");
+    }
+
     println!("cargo:rustc-link-search=native={}", lib_path.display());
     println!("cargo:rustc-link-lib=static=acconeer_a121");
 
@@ -153,8 +182,8 @@ fn generate_bindings(rss_path: &Path) -> Result<(), String> {
     let headers = rss_path.join("include");
     let mut bindings = bindgen::Builder::default()
         .use_core()
+        .clang_arg("-I/usr/lib/arm-none-eabi/include/")
         .clang_arg(format!("-I{}", headers.display()))
-        .layout_tests(true)
         .generate_cstr(true);
 
     for entry in
