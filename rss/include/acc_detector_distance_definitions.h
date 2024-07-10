@@ -9,12 +9,19 @@
 
 
 /**
- * The size of the result from a completed calibration update.
+ * @ingroup Distance
+ *
+ * @{
+ */
+
+
+/**
+ * @brief The size of the result from a completed calibration update
  */
 #define ACC_DETECTOR_CAL_RESULT_DYNAMIC_DATA_SIZE (8U)
 
 /**
- * The result from a completed calibration update.
+ * @brief The result from a completed calibration update
  */
 typedef struct
 {
@@ -61,5 +68,9 @@ typedef enum
 	ACC_DETECTOR_DISTANCE_REFLECTOR_SHAPE_PLANAR,
 } acc_detector_distance_reflector_shape_t;
 
+
+/**
+ * @}
+ */
 
 #endif
