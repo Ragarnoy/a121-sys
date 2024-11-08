@@ -4,6 +4,7 @@ use std::env;
 use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 pub fn generate_bindings(rss_path: &Path) -> Result<()> {
     let headers = rss_path.join("include");
@@ -14,12 +15,17 @@ pub fn generate_bindings(rss_path: &Path) -> Result<()> {
     // Get target-specific configuration
     let target = env::var("TARGET").unwrap_or_default();
 
+    // Get GCC sysroot
+    let sysroot = get_gcc_sysroot()?;
+
     // Base bindgen configuration
-    let mut builder = Builder::default().use_core().generate_cstr(true);
+    let mut builder = Builder::default()
+        .use_core()
+        .generate_cstr(true)
+        .detect_include_paths(true);
 
     // Add target-specific configurations
     if target.contains("thumb") || target.contains("arm") {
-        // For ARM targets
         builder = builder
             .clang_arg("--target=arm-none-eabi")
             .clang_arg("-mcpu=cortex-m4")
@@ -27,21 +33,22 @@ pub fn generate_bindings(rss_path: &Path) -> Result<()> {
             .clang_arg("-mfloat-abi=hard")
             .clang_arg("-mfpu=fpv4-sp-d16");
 
-        // Add ARM-specific include paths
-        if let Ok(gcc_path) = env::var("ARM_GCC_PATH") {
-            builder = builder
-                .clang_arg(format!("-I{}/arm-none-eabi/include", gcc_path))
-                .clang_arg(format!(
-                    "-I{}/lib/gcc/arm-none-eabi/9.3.1/include",
-                    gcc_path
-                ));
-        }
-    }
+        // Add sysroot includes
+        builder = builder
+            .clang_arg(format!("--sysroot={}", sysroot))
+            .clang_arg(format!("-I{}/include", sysroot))
+            .clang_arg(format!("-I{}/arm-none-eabi/include", sysroot));
 
-    // Add common include paths
-    if let Ok(cpath) = env::var("CPATH") {
-        for path in cpath.split(':') {
-            builder = builder.clang_arg(format!("-I{}", path));
+        // Add GCC includes
+        if let Ok(output) = Command::new("arm-none-eabi-gcc")
+            .args(["-print-libgcc-file-name"])
+            .output()
+        {
+            if let Ok(libgcc_path) = String::from_utf8(output.stdout) {
+                let libgcc_dir = Path::new(libgcc_path.trim()).parent().unwrap();
+                builder = builder.clang_arg(format!("-I{}/include", libgcc_dir.display()));
+                builder = builder.clang_arg(format!("-I{}/include-fixed", libgcc_dir.display()));
+            }
         }
     }
 
@@ -54,7 +61,7 @@ pub fn generate_bindings(rss_path: &Path) -> Result<()> {
 
     let bindings = bindings
         .generate()
-        .map_err(|_| BuildError::BindgenError("Failed to generate bindings".into()))?;
+        .map_err(|e| BuildError::BindgenError(format!("Failed to generate bindings: {:?}", e)))?;
 
     // Write bindings to file
     let out_path = PathBuf::from(env::var("OUT_DIR").map_err(BuildError::EnvVar)?);
@@ -63,6 +70,17 @@ pub fn generate_bindings(rss_path: &Path) -> Result<()> {
         .map_err(BuildError::Io)?;
 
     Ok(())
+}
+
+fn get_gcc_sysroot() -> Result<String> {
+    let output = Command::new("arm-none-eabi-gcc")
+        .args(["-print-sysroot"])
+        .output()
+        .map_err(|e| BuildError::BindgenError(format!("Failed to get GCC sysroot: {}", e)))?;
+
+    String::from_utf8(output.stdout)
+        .map(|s| s.trim().to_string())
+        .map_err(|e| BuildError::BindgenError(format!("Invalid sysroot path: {}", e)))
 }
 
 fn add_headers_to_bindings(mut bindings: Builder, headers: &Path) -> Result<Builder> {

@@ -13,10 +13,7 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
-  # Update CPATH to include all necessary header locations
-  CPATH: "/usr/arm-none-eabi/include:/home/runner/gcc-arm-none-eabi-9.2020.2-linux/gcc-arm-none-eabi-9-2020-q2-update/arm-none-eabi/include:/home/runner/gcc-arm-none-eabi-9.2020.2-linux/gcc-arm-none-eabi-9-2020-q2-update/lib/gcc/arm-none-eabi/9.3.1/include"
-  ACC_RSS_LIBS: "/home/runner/work/a121-rs/a121-rs/staticlibs"
-  # Add these environment variables for bindgen
+  ACC_RSS_LIBS: "/home/runner/work/a121-sys/a121-sys/staticlibs"
   BINDGEN_EXTRA_CLANG_ARGS: "--target=arm-none-eabi -mcpu=cortex-m4"
   LIBCLANG_PATH: "/usr/lib/llvm-14/lib"
 
@@ -50,30 +47,31 @@ jobs:
       - name: Create lib directory
         run: mkdir -p "$ACC_RSS_LIBS"
 
-      # Debug step to verify header locations
+      # Setup correct paths
+      - name: Setup ARM GCC paths
+        run: |
+          GCC_ARM_PATH=$(dirname $(dirname $(which arm-none-eabi-gcc)))
+          echo "ARM_GCC_PATH=${GCC_ARM_PATH}" >> $GITHUB_ENV
+          echo "CPATH=${GCC_ARM_PATH}/arm-none-eabi/include:${GCC_ARM_PATH}/lib/gcc/arm-none-eabi/9.2.1/include" >> $GITHUB_ENV
+
+      # Debug step to verify paths
       - name: Debug environment
         run: |
+          echo "ARM_GCC_PATH=$ARM_GCC_PATH"
           echo "CPATH=$CPATH"
-          ls -la /home/runner/gcc-arm-none-eabi-9.2020.2-linux/gcc-arm-none-eabi-9-2020-q2-update/arm-none-eabi/include || true
-          ls -la /usr/arm-none-eabi/include || true
-          arm-none-eabi-gcc -print-sysroot || true
-          find /home/runner/gcc-arm-none-eabi-9.2020.2-linux -name inttypes.h || true
-
-      # Set up symlinks for headers if needed
-      - name: Setup header symlinks
-        run: |
-          sudo mkdir -p /usr/arm-none-eabi
-          sudo ln -s /home/runner/gcc-arm-none-eabi-9.2020.2-linux/gcc-arm-none-eabi-9-2020-q2-update/arm-none-eabi/include /usr/arm-none-eabi/include || true
+          ls -la "$ARM_GCC_PATH/arm-none-eabi/include" || true
+          ls -la "$ARM_GCC_PATH/lib/gcc/arm-none-eabi/9.2.1/include" || true
+          which arm-none-eabi-gcc
+          arm-none-eabi-gcc -print-sysroot
 
       - name: cargo check
         run: cargo check --target ${{ matrix.target }} --features="stub_library,distance,presence"
         env:
-          # Add these environment variables specifically for the cargo check command
           CC_thumbv7em_none_eabihf: arm-none-eabi-gcc
           AR_thumbv7em_none_eabihf: arm-none-eabi-ar
           RUSTFLAGS: "-C link-arg=-nostartfiles"
 
-      # Optional: Add artifact collection for debugging
+      # Upload build logs on failure
       - name: Upload build logs
         if: failure()
         uses: actions/upload-artifact@v3
