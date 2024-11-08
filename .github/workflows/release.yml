@@ -84,9 +84,3 @@ jobs:
           CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
           CC_thumbv7em_none_eabihf: arm-none-eabi-gcc
           AR_thumbv7em_none_eabihf: arm-none-eabi-ar
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          generate_release_notes: true
-          prerelease: ${{ contains(github.ref, '-') }}
