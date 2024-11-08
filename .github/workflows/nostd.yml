@@ -13,8 +13,14 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
-  CPATH: "/home/runner/gcc-arm-none-eabi-9.2020.2-linux/gcc-arm-none-eabi-9-2020-q2-update/include"
-  ACC_RSS_LIBS: "/home/runner/work/a121-rs/a121-rs/staticlibs"
+  # Update these paths to use the ARM toolchain paths correctly
+  ARM_GCC_PATH: "/home/runner/gcc-arm-none-eabi-9.2020.2-linux/gcc-arm-none-eabi-9-2020-q2-update"
+  CPATH: "/home/runner/gcc-arm-none-eabi-9.2020.2-linux/gcc-arm-none-eabi-9-2020-q2-update/arm-none-eabi/include:/home/runner/gcc-arm-none-eabi-9.2020.2-linux/gcc-arm-none-eabi-9-2020-q2-update/lib/gcc/arm-none-eabi/9.3.1/include"
+  ACC_RSS_LIBS: "/home/runner/work/a121-sys/a121-sys/staticlibs"
+  # Add environment variables for the cc crate
+  CC_thumbv7em_none_eabihf: "arm-none-eabi-gcc"
+  AR_thumbv7em_none_eabihf: "arm-none-eabi-ar"
+  BINDGEN_EXTRA_CLANG_ARGS: "-I/home/runner/gcc-arm-none-eabi-9.2020.2-linux/gcc-arm-none-eabi-9-2020-q2-update/arm-none-eabi/include -I/home/runner/gcc-arm-none-eabi-9.2020.2-linux/gcc-arm-none-eabi-9-2020-q2-update/lib/gcc/arm-none-eabi/9.3.1/include"
 
 jobs:
   nostd:
@@ -27,15 +33,40 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
+
       - name: Install stable
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
+
       - name: Install ARM toolchain
         uses: carlosperate/arm-none-eabi-gcc-action@v1
         with:
           release: '9-2020-q2'
+
       - name: Create lib directory
         run: mkdir -p "$ACC_RSS_LIBS"
+
+      - name: Setup build environment
+        run: |
+          echo "$ARM_GCC_PATH/bin" >> $GITHUB_PATH
+          # Verify toolchain installation
+          arm-none-eabi-gcc --version
+          # Show include paths
+          echo "Include paths:"
+          echo "$CPATH" | tr ':' '\n'
+
+      # Optional: Debug step to verify environment
+      - name: Debug environment
+        run: |
+          echo "PATH: $PATH"
+          echo "CPATH: $CPATH"
+          echo "CC: $(which arm-none-eabi-gcc)"
+          echo "AR: $(which arm-none-eabi-ar)"
+          ls -la "$ARM_GCC_PATH/arm-none-eabi/include" || true
+          ls -la "$ARM_GCC_PATH/lib/gcc/arm-none-eabi/9.3.1/include" || true
+
       - name: cargo check
-        run: cargo check --target ${{ matrix.target }} --features="stub_library,distance,presence"
+        run: |
+          # First try with verbose output for debugging
+          cargo check -vv --target ${{ matrix.target }} --features="stub_library,distance,presence"
