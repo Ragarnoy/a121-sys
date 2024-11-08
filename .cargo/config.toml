@@ -1,0 +1,11 @@
+[package]
+publish = true
+
+[package.metadata.release]
+sign-commit = true
+sign-tag = true
+push = true
+publish = true
+pre-release-commit-message = "Release version {{version}}"
+tag-message = "Release version {{version}}"
+tag-prefix = "v"
