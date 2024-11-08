@@ -43,6 +43,13 @@ jobs:
           echo "ARM_GCC_PATH=${GCC_ARM_PATH}" >> $GITHUB_ENV
           echo "CPATH=${GCC_ARM_PATH}/arm-none-eabi/include:${GCC_ARM_PATH}/lib/gcc/arm-none-eabi/9.2.1/include" >> $GITHUB_ENV
 
+      # Generate Cargo.lock
+      - name: Generate Cargo.lock
+        run: cargo generate-lockfile
+        env:
+          CC_thumbv7em_none_eabihf: arm-none-eabi-gcc
+          AR_thumbv7em_none_eabihf: arm-none-eabi-ar
+
       - name: Debug information
         run: |
           echo "ARM_GCC_PATH=$ARM_GCC_PATH"
@@ -61,17 +68,10 @@ jobs:
             exit 1
           fi
 
-      # Generate Cargo.lock before packaging
-      - name: Generate Cargo.lock
-        run: cargo generate-lockfile
-        env:
-          CC_thumbv7em_none_eabihf: arm-none-eabi-gcc
-          AR_thumbv7em_none_eabihf: arm-none-eabi-ar
-
       # Build and verify the package
       - name: Build package
         run: |
-          cargo package --no-verify --allow-dirty --features="stub_library,distance,presence"
+          cargo package --no-verify --features="stub_library,distance,presence"
         env:
           CC_thumbv7em_none_eabihf: arm-none-eabi-gcc
           AR_thumbv7em_none_eabihf: arm-none-eabi-ar
@@ -90,9 +90,3 @@ jobs:
         with:
           generate_release_notes: true
           prerelease: ${{ contains(github.ref, '-') }}
-
-      # Clean up - remove Cargo.lock
-      - name: Cleanup
-        if: always()
-        run: |
-          rm -f Cargo.lock || true
