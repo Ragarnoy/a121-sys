@@ -13,14 +13,12 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
-  # Update these paths to use the ARM toolchain paths correctly
-  ARM_GCC_PATH: "/home/runner/gcc-arm-none-eabi-9.2020.2-linux/gcc-arm-none-eabi-9-2020-q2-update"
-  CPATH: "/home/runner/gcc-arm-none-eabi-9.2020.2-linux/gcc-arm-none-eabi-9-2020-q2-update/arm-none-eabi/include:/home/runner/gcc-arm-none-eabi-9.2020.2-linux/gcc-arm-none-eabi-9-2020-q2-update/lib/gcc/arm-none-eabi/9.3.1/include"
-  ACC_RSS_LIBS: "/home/runner/work/a121-sys/a121-sys/staticlibs"
-  # Add environment variables for the cc crate
-  CC_thumbv7em_none_eabihf: "arm-none-eabi-gcc"
-  AR_thumbv7em_none_eabihf: "arm-none-eabi-ar"
-  BINDGEN_EXTRA_CLANG_ARGS: "-I/home/runner/gcc-arm-none-eabi-9.2020.2-linux/gcc-arm-none-eabi-9-2020-q2-update/arm-none-eabi/include -I/home/runner/gcc-arm-none-eabi-9.2020.2-linux/gcc-arm-none-eabi-9-2020-q2-update/lib/gcc/arm-none-eabi/9.3.1/include"
+  # Update CPATH to include all necessary header locations
+  CPATH: "/usr/arm-none-eabi/include:/home/runner/gcc-arm-none-eabi-9.2020.2-linux/gcc-arm-none-eabi-9-2020-q2-update/arm-none-eabi/include:/home/runner/gcc-arm-none-eabi-9.2020.2-linux/gcc-arm-none-eabi-9-2020-q2-update/lib/gcc/arm-none-eabi/9.3.1/include"
+  ACC_RSS_LIBS: "/home/runner/work/a121-rs/a121-rs/staticlibs"
+  # Add these environment variables for bindgen
+  BINDGEN_EXTRA_CLANG_ARGS: "--target=arm-none-eabi -mcpu=cortex-m4"
+  LIBCLANG_PATH: "/usr/lib/llvm-14/lib"
 
 jobs:
   nostd:
@@ -44,29 +42,43 @@ jobs:
         with:
           release: '9-2020-q2'
 
+      - name: Install LLVM and Clang
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y llvm-14-dev libclang-14-dev clang-14
+
       - name: Create lib directory
         run: mkdir -p "$ACC_RSS_LIBS"
 
-      - name: Setup build environment
-        run: |
-          echo "$ARM_GCC_PATH/bin" >> $GITHUB_PATH
-          # Verify toolchain installation
-          arm-none-eabi-gcc --version
-          # Show include paths
-          echo "Include paths:"
-          echo "$CPATH" | tr ':' '\n'
-
-      # Optional: Debug step to verify environment
+      # Debug step to verify header locations
       - name: Debug environment
         run: |
-          echo "PATH: $PATH"
-          echo "CPATH: $CPATH"
-          echo "CC: $(which arm-none-eabi-gcc)"
-          echo "AR: $(which arm-none-eabi-ar)"
-          ls -la "$ARM_GCC_PATH/arm-none-eabi/include" || true
-          ls -la "$ARM_GCC_PATH/lib/gcc/arm-none-eabi/9.3.1/include" || true
+          echo "CPATH=$CPATH"
+          ls -la /home/runner/gcc-arm-none-eabi-9.2020.2-linux/gcc-arm-none-eabi-9-2020-q2-update/arm-none-eabi/include || true
+          ls -la /usr/arm-none-eabi/include || true
+          arm-none-eabi-gcc -print-sysroot || true
+          find /home/runner/gcc-arm-none-eabi-9.2020.2-linux -name inttypes.h || true
+
+      # Set up symlinks for headers if needed
+      - name: Setup header symlinks
+        run: |
+          sudo mkdir -p /usr/arm-none-eabi
+          sudo ln -s /home/runner/gcc-arm-none-eabi-9.2020.2-linux/gcc-arm-none-eabi-9-2020-q2-update/arm-none-eabi/include /usr/arm-none-eabi/include || true
 
       - name: cargo check
-        run: |
-          # First try with verbose output for debugging
-          cargo check -vv --target ${{ matrix.target }} --features="stub_library,distance,presence"
+        run: cargo check --target ${{ matrix.target }} --features="stub_library,distance,presence"
+        env:
+          # Add these environment variables specifically for the cargo check command
+          CC_thumbv7em_none_eabihf: arm-none-eabi-gcc
+          AR_thumbv7em_none_eabihf: arm-none-eabi-ar
+          RUSTFLAGS: "-C link-arg=-nostartfiles"
+
+      # Optional: Add artifact collection for debugging
+      - name: Upload build logs
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-logs
+          path: |
+            target/thumbv7em-none-eabihf/debug/build/*/output
+            target/thumbv7em-none-eabihf/debug/build/*/stderr

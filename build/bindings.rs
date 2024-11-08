@@ -1,8 +1,9 @@
 use crate::error::{BuildError, Result};
 use bindgen::Builder;
+use std::env;
 use std::ffi::OsStr;
+use std::fs;
 use std::path::{Path, PathBuf};
-use std::{env, fs};
 
 pub fn generate_bindings(rss_path: &Path) -> Result<()> {
     let headers = rss_path.join("include");
@@ -10,20 +11,53 @@ pub fn generate_bindings(rss_path: &Path) -> Result<()> {
         return Err(BuildError::HeadersNotFound(headers));
     }
 
-    let mut bindings = Builder::default()
-        .use_core()
-        .clang_arg("-I/usr/lib/arm-none-eabi/include/")
-        .clang_arg(format!("-I{}", headers.display()))
-        .generate_cstr(true);
+    // Get target-specific configuration
+    let target = env::var("TARGET").unwrap_or_default();
 
-    bindings = add_headers_to_bindings(bindings, &headers)?;
+    // Base bindgen configuration
+    let mut builder = Builder::default().use_core().generate_cstr(true);
+
+    // Add target-specific configurations
+    if target.contains("thumb") || target.contains("arm") {
+        // For ARM targets
+        builder = builder
+            .clang_arg("--target=arm-none-eabi")
+            .clang_arg("-mcpu=cortex-m4")
+            .clang_arg("-mthumb")
+            .clang_arg("-mfloat-abi=hard")
+            .clang_arg("-mfpu=fpv4-sp-d16");
+
+        // Add ARM-specific include paths
+        if let Ok(gcc_path) = env::var("ARM_GCC_PATH") {
+            builder = builder
+                .clang_arg(format!("-I{}/arm-none-eabi/include", gcc_path))
+                .clang_arg(format!(
+                    "-I{}/lib/gcc/arm-none-eabi/9.3.1/include",
+                    gcc_path
+                ));
+        }
+    }
+
+    // Add common include paths
+    if let Ok(cpath) = env::var("CPATH") {
+        for path in cpath.split(':') {
+            builder = builder.clang_arg(format!("-I{}", path));
+        }
+    }
+
+    // Add our headers path
+    builder = builder.clang_arg(format!("-I{}", headers.display()));
+
+    // Add headers and generate bindings
+    let mut bindings = add_headers_to_bindings(builder, &headers)?;
     bindings = add_log_wrapper(bindings)?;
 
-    let out_path = PathBuf::from(env::var("OUT_DIR").map_err(BuildError::EnvVar)?);
     let bindings = bindings
         .generate()
         .map_err(|_| BuildError::BindgenError("Failed to generate bindings".into()))?;
 
+    // Write bindings to file
+    let out_path = PathBuf::from(env::var("OUT_DIR").map_err(BuildError::EnvVar)?);
     bindings
         .write_to_file(out_path.join("bindings.rs"))
         .map_err(BuildError::Io)?;
@@ -50,7 +84,20 @@ fn add_headers_to_bindings(mut bindings: Builder, headers: &Path) -> Result<Buil
 }
 
 fn add_log_wrapper(mut bindings: Builder) -> Result<Builder> {
-    cc::Build::new()
+    // Determine target-specific compiler settings
+    let target = env::var("TARGET").unwrap_or_default();
+    let mut build = cc::Build::new();
+
+    if target.contains("thumb") || target.contains("arm") {
+        build
+            .compiler("arm-none-eabi-gcc")
+            .flag("-mcpu=cortex-m4")
+            .flag("-mthumb")
+            .flag("-mfloat-abi=hard")
+            .flag("-mfpu=fpv4-sp-d16");
+    }
+
+    build
         .file("c_src/logging.c")
         .include("c_src")
         .warnings_into_errors(true)
