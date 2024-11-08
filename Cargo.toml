@@ -10,20 +10,20 @@ readme = "README.md"
 license = "MIT"
 edition = "2021"
 version = "0.4.0"
-rust-version = "1.77"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+rust-version = "1.82"
+build = "build/mod.rs"
 
 [dependencies]
 
 [build-dependencies]
-bindgen = { version = "0.69" }
-cc = "1.0"
+bindgen = { version = "0.70.1" }
+cc = "1.1"
 
 [features]
 stub_library = []
 distance = []
 presence = []
+std = []
 
 [profile.release]
 codegen-units = 1
