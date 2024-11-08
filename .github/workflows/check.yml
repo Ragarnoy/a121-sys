@@ -63,17 +63,12 @@ jobs:
   doc:
     runs-on: ubuntu-latest
     name: nightly / doc
-    strategy:
-      matrix:
-        target: [thumbv7em-none-eabihf]
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
       - name: Install nightly
         uses: dtolnay/rust-toolchain@nightly
-        with:
-          targets: ${{ matrix.target }}
       - name: Install ARM toolchain
         uses: carlosperate/arm-none-eabi-gcc-action@v1
         with:
