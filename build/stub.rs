@@ -41,7 +41,7 @@ fn run_python_script(rss_path: &Path) -> Result<()> {
     Ok(())
 }
 
-fn generate_stub_libraries(rss_path: &Path, out_dir: &PathBuf) -> Result<()> {
+fn generate_stub_libraries(rss_path: &Path, out_dir: &Path) -> Result<()> {
     compile_and_archive(
         out_dir,
         rss_path,
