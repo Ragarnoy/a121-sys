@@ -1,0 +1,82 @@
+name: no-std
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  ACC_RSS_LIBS: "/home/runner/work/a121-sys/a121-sys/staticlibs"
+  BINDGEN_EXTRA_CLANG_ARGS: "--target=arm-none-eabi -mcpu=cortex-m4"
+  LIBCLANG_PATH: "/usr/lib/llvm-14/lib"
+
+jobs:
+  nostd:
+    runs-on: ubuntu-latest
+    name: ${{ matrix.target }}
+    strategy:
+      matrix:
+        target: [thumbv7em-none-eabihf]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install ARM toolchain
+        uses: carlosperate/arm-none-eabi-gcc-action@v1
+        with:
+          release: '9-2020-q2'
+
+      - name: Install LLVM and Clang
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y llvm-14-dev libclang-14-dev clang-14
+
+      - name: Create lib directory
+        run: mkdir -p "$ACC_RSS_LIBS"
+
+      # Setup correct paths
+      - name: Setup ARM GCC paths
+        run: |
+          GCC_ARM_PATH=$(dirname $(dirname $(which arm-none-eabi-gcc)))
+          echo "ARM_GCC_PATH=${GCC_ARM_PATH}" >> $GITHUB_ENV
+          echo "CPATH=${GCC_ARM_PATH}/arm-none-eabi/include:${GCC_ARM_PATH}/lib/gcc/arm-none-eabi/9.2.1/include" >> $GITHUB_ENV
+
+      # Debug step to verify paths
+      - name: Debug environment
+        run: |
+          echo "ARM_GCC_PATH=$ARM_GCC_PATH"
+          echo "CPATH=$CPATH"
+          ls -la "$ARM_GCC_PATH/arm-none-eabi/include" || true
+          ls -la "$ARM_GCC_PATH/lib/gcc/arm-none-eabi/9.2.1/include" || true
+          which arm-none-eabi-gcc
+          arm-none-eabi-gcc -print-sysroot
+
+      - name: cargo check
+        run: cargo check --target ${{ matrix.target }} --features="stub_library,distance,presence"
+        env:
+          CC_thumbv7em_none_eabihf: arm-none-eabi-gcc
+          AR_thumbv7em_none_eabihf: arm-none-eabi-ar
+          RUSTFLAGS: "-C link-arg=-nostartfiles"
+
+      # Upload build logs on failure
+      - name: Upload build logs
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-logs
+          path: |
+            target/thumbv7em-none-eabihf/debug/build/*/output
+            target/thumbv7em-none-eabihf/debug/build/*/stderr
