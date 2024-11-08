@@ -61,7 +61,14 @@ jobs:
             exit 1
           fi
 
-      # Build and verify the package first
+      # Generate Cargo.lock before packaging
+      - name: Generate Cargo.lock
+        run: cargo generate-lockfile
+        env:
+          CC_thumbv7em_none_eabihf: arm-none-eabi-gcc
+          AR_thumbv7em_none_eabihf: arm-none-eabi-ar
+
+      # Build and verify the package
       - name: Build package
         run: |
           cargo package --no-verify --allow-dirty --features="stub_library,distance,presence"
@@ -82,4 +89,10 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           generate_release_notes: true
-          prerelease: ${{ contains(github.ref, '-') }} # Marks as prerelease if version contains a hyphen
+          prerelease: ${{ contains(github.ref, '-') }}
+
+      # Clean up - remove Cargo.lock
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f Cargo.lock || true
