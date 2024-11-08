@@ -1,0 +1,41 @@
+name: no-std
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CPATH: "/home/runner/gcc-arm-none-eabi-9.2020.2-linux/gcc-arm-none-eabi-9-2020-q2-update/include"
+  ACC_RSS_LIBS: "/home/runner/work/a121-rs/a121-rs/staticlibs"
+
+jobs:
+  nostd:
+    runs-on: ubuntu-latest
+    name: ${{ matrix.target }}
+    strategy:
+      matrix:
+        target: [thumbv7em-none-eabihf]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - name: Install ARM toolchain
+        uses: carlosperate/arm-none-eabi-gcc-action@v1
+        with:
+          release: '9-2020-q2'
+      - name: Create lib directory
+        run: mkdir -p "$ACC_RSS_LIBS"
+      - name: cargo check
+        run: cargo check --target ${{ matrix.target }} --features="stub_library,distance,presence"
