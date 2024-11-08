@@ -1,8 +1,8 @@
 use crate::error::{BuildError, Result};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Command;
 
-pub fn generate_stubs(rss_path: &Path, out_dir: &PathBuf) -> Result<()> {
+pub fn generate_stubs(rss_path: &Path, out_dir: &Path) -> Result<()> {
     run_python_script(rss_path)?;
     generate_stub_libraries(rss_path, out_dir)?;
     // check if arm-none-eabi-nm is available, if so, validate stub libraries
