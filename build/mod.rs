@@ -6,6 +6,7 @@ mod bindings;
 mod error;
 mod library;
 mod stub;
+mod stub_generator;
 
 use error::BuildError;
 pub use error::Result;

@@ -27,7 +27,6 @@ std = []
 
 [package.metadata.docs.rs]
 all-features = true
-targets = ["thumbv7em-none-eabihf"]
 rustdoc-args = ["--cfg", "docsrs"]
 
 
