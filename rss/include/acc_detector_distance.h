@@ -4,7 +4,6 @@
 #ifndef ACC_DETECTOR_DISTANCE_H_
 #define ACC_DETECTOR_DISTANCE_H_
 
-
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -30,7 +29,6 @@
  */
 #define ACC_DETECTOR_DISTANCE_RESULT_MAX_NUM_DISTANCES (10U)
 
-
 /**
  * @brief Distance Detector handle
  *
@@ -38,14 +36,12 @@
  */
 typedef struct acc_detector_distance_handle acc_detector_distance_handle_t;
 
-
 /**
  * @brief Distance Detector configuration
  *
  * Used when calling the Distance Detector configuration functions.
  */
 typedef struct acc_detector_distance_config acc_detector_distance_config_t;
-
 
 /**
  * @brief Distance Detector result returned from @ref acc_detector_distance_process
@@ -126,7 +122,6 @@ typedef struct
 	const acc_config_t *sensor_config;
 } acc_detector_distance_result_t;
 
-
 /**
  * @brief Create a Distance Detector configuration
  *
@@ -135,7 +130,6 @@ typedef struct
  * @return Distance Detector configuration, NULL at failure
  */
 acc_detector_distance_config_t *acc_detector_distance_config_create(void);
-
 
 /**
  * @brief Destroy Distance Detector configuration
@@ -147,7 +141,6 @@ acc_detector_distance_config_t *acc_detector_distance_config_create(void);
  */
 void acc_detector_distance_config_destroy(acc_detector_distance_config_t *config);
 
-
 /**
  * @brief Log Distance configuration, typically through printf
  *
@@ -157,7 +150,6 @@ void acc_detector_distance_config_destroy(acc_detector_distance_config_t *config
  * @param[in] config The Distance Detector configuration
  */
 void acc_detector_distance_config_log(const acc_detector_distance_handle_t *handle, const acc_detector_distance_config_t *config);
-
 
 /**
  * @brief Get the memory size needed to use the Distance Detector API functions
@@ -175,10 +167,7 @@ void acc_detector_distance_config_log(const acc_detector_distance_handle_t *hand
  * @param[out] detector_cal_result_static_size The calibration result size
  * @return true if successful, false otherwise
  */
-bool acc_detector_distance_get_sizes(const acc_detector_distance_handle_t *handle,
-                                     uint32_t                             *buffer_size,
-                                     uint32_t                             *detector_cal_result_static_size);
-
+bool acc_detector_distance_get_sizes(const acc_detector_distance_handle_t *handle, uint32_t *buffer_size, uint32_t *detector_cal_result_static_size);
 
 /**
  * @brief Create Distance Detector handle using the provided Distance Detector configuration
@@ -190,7 +179,6 @@ bool acc_detector_distance_get_sizes(const acc_detector_distance_handle_t *handl
  */
 acc_detector_distance_handle_t *acc_detector_distance_create(const acc_detector_distance_config_t *config);
 
-
 /**
  * @brief Destroy Distance Detector handle, freeing its resources
  *
@@ -200,7 +188,6 @@ acc_detector_distance_handle_t *acc_detector_distance_create(const acc_detector_
  * @param[in] handle The Distance Detector handle to destroy
  */
 void acc_detector_distance_destroy(acc_detector_distance_handle_t *handle);
-
 
 /**
  * @brief Calibrate detector
@@ -228,12 +215,11 @@ bool acc_detector_distance_calibrate(acc_sensor_t                      *sensor,
                                      acc_detector_distance_handle_t    *handle,
                                      const acc_cal_result_t            *sensor_cal_result,
                                      void                              *buffer,
-                                     uint32_t                          buffer_size,
+                                     uint32_t                           buffer_size,
                                      uint8_t                           *detector_cal_result_static,
-                                     uint32_t                          detector_cal_result_static_size,
+                                     uint32_t                           detector_cal_result_static_size,
                                      acc_detector_cal_result_dynamic_t *detector_cal_result_dynamic,
                                      bool                              *calibration_complete);
-
 
 /**
  * @brief Perform a subset of the full Detector calibration
@@ -259,10 +245,9 @@ bool acc_detector_distance_update_calibration(acc_sensor_t                      
                                               acc_detector_distance_handle_t    *handle,
                                               const acc_cal_result_t            *sensor_cal_result,
                                               void                              *buffer,
-                                              uint32_t                          buffer_size,
+                                              uint32_t                           buffer_size,
                                               acc_detector_cal_result_dynamic_t *detector_cal_result_dynamic,
                                               bool                              *calibration_complete);
-
 
 /**
  * @brief Prepare the Detector for measurements
@@ -285,8 +270,7 @@ bool acc_detector_distance_prepare(const acc_detector_distance_handle_t *handle,
                                    acc_sensor_t                         *sensor,
                                    const acc_cal_result_t               *sensor_cal_result,
                                    void                                 *buffer,
-                                   uint32_t                             buffer_size);
-
+                                   uint32_t                              buffer_size);
 
 /**
  * @brief Process sensor data into a Detector result
@@ -314,7 +298,6 @@ bool acc_detector_distance_process(acc_detector_distance_handle_t    *handle,
                                    bool                              *result_available,
                                    acc_detector_distance_result_t    *result);
 
-
 /**
  * @brief Set start of measured interval (m)
  *
@@ -326,7 +309,6 @@ bool acc_detector_distance_process(acc_detector_distance_handle_t    *handle,
  */
 void acc_detector_distance_config_start_set(acc_detector_distance_config_t *config, float start_m);
 
-
 /**
  * @brief Get start of measured interval (m)
  *
@@ -336,7 +318,6 @@ void acc_detector_distance_config_start_set(acc_detector_distance_config_t *conf
  * @return The start of measured interval (m)
  */
 float acc_detector_distance_config_start_get(const acc_detector_distance_config_t *config);
-
 
 /**
  * @brief Set end of measured interval (m)
@@ -352,7 +333,6 @@ float acc_detector_distance_config_start_get(const acc_detector_distance_config_
  */
 void acc_detector_distance_config_end_set(acc_detector_distance_config_t *config, float end_m);
 
-
 /**
  * @brief Get end of measured interval (m)
  *
@@ -362,7 +342,6 @@ void acc_detector_distance_config_end_set(acc_detector_distance_config_t *config
  * @return The end of measured interval
  */
 float acc_detector_distance_config_end_get(const acc_detector_distance_config_t *config);
-
 
 /**
  * @brief Set maximum step length
@@ -384,7 +363,6 @@ float acc_detector_distance_config_end_get(const acc_detector_distance_config_t 
  */
 void acc_detector_distance_config_max_step_length_set(acc_detector_distance_config_t *config, uint16_t max_step_length);
 
-
 /**
  * @brief Get maximum step length
  *
@@ -394,7 +372,29 @@ void acc_detector_distance_config_max_step_length_set(acc_detector_distance_conf
  * @return The maximum step length
  */
 uint16_t acc_detector_distance_config_max_step_length_get(const acc_detector_distance_config_t *config);
+/**
+ * @brief Override automatically set PRF
+ *
+ * Makes it possible to manually set the PRF used when measuring
+ *
+ * See @ref acc_config_prf_t for details.
+ *
+ * @param[in] config The Distance Detector configuration
+ * @param[in] override true to enable override, false to disable
+ * @param[in] prf The Pulse Repetition Frequency to use
+ */
+void acc_detector_distance_config_prf_override_set(acc_detector_distance_config_t *config, bool override, acc_config_prf_t prf);
 
+/**
+ * @brief Get if PRF override is set and its value
+ *
+ * See @ref acc_detector_distance_config_prf_override_set
+ *
+ * @param[in] config The Distance Detector configuration
+ * @param[out] override true to enable override, false to disable
+ * @param[out] prf The Pulse Repetition Frequency to use
+ */
+void acc_detector_distance_config_prf_override_get(const acc_detector_distance_config_t *config, bool *override, acc_config_prf_t *prf);
 
 /**
  * @brief Enable close range leakage cancellation
@@ -413,7 +413,6 @@ uint16_t acc_detector_distance_config_max_step_length_get(const acc_detector_dis
  */
 void acc_detector_distance_config_close_range_leakage_cancellation_set(acc_detector_distance_config_t *config, bool enable);
 
-
 /**
  * @brief Get if close range leakage cancellation is enabled
  *
@@ -423,7 +422,6 @@ void acc_detector_distance_config_close_range_leakage_cancellation_set(acc_detec
  * @return true if enabled, false if disabled
  */
 bool acc_detector_distance_config_close_range_leakage_cancellation_get(const acc_detector_distance_config_t *config);
-
 
 /**
  * @brief Set signal quality (dB)
@@ -437,7 +435,6 @@ bool acc_detector_distance_config_close_range_leakage_cancellation_get(const acc
  */
 void acc_detector_distance_config_signal_quality_set(acc_detector_distance_config_t *config, float signal_quality);
 
-
 /**
  * @brief Get signal quality
  *
@@ -447,7 +444,6 @@ void acc_detector_distance_config_signal_quality_set(acc_detector_distance_confi
  * @return The signal quality
  */
 float acc_detector_distance_config_signal_quality_get(const acc_detector_distance_config_t *config);
-
 
 /**
  * @brief Set maximum Profile
@@ -465,7 +461,6 @@ float acc_detector_distance_config_signal_quality_get(const acc_detector_distanc
  */
 void acc_detector_distance_config_max_profile_set(acc_detector_distance_config_t *config, acc_config_profile_t max_profile);
 
-
 /**
  * @brief Get maximum Profile
  *
@@ -475,7 +470,6 @@ void acc_detector_distance_config_max_profile_set(acc_detector_distance_config_t
  * @return The maximum Profile
  */
 acc_config_profile_t acc_detector_distance_config_max_profile_get(const acc_detector_distance_config_t *config);
-
 
 /**
  * @brief Set threshold method
@@ -492,9 +486,8 @@ acc_config_profile_t acc_detector_distance_config_max_profile_get(const acc_dete
  * @param[out] config The Distance Detector configuration
  * @param[in] threshold_method The threshold method
  */
-void acc_detector_distance_config_threshold_method_set(acc_detector_distance_config_t           *config,
+void acc_detector_distance_config_threshold_method_set(acc_detector_distance_config_t          *config,
                                                        acc_detector_distance_threshold_method_t threshold_method);
-
 
 /**
  * @brief Get threshold method
@@ -505,7 +498,6 @@ void acc_detector_distance_config_threshold_method_set(acc_detector_distance_con
  * @return The threshold method
  */
 acc_detector_distance_threshold_method_t acc_detector_distance_config_threshold_method_get(const acc_detector_distance_config_t *config);
-
 
 /**
  * @brief Set peak sorting method
@@ -524,7 +516,6 @@ acc_detector_distance_threshold_method_t acc_detector_distance_config_threshold_
  */
 void acc_detector_distance_config_peak_sorting_set(acc_detector_distance_config_t *config, acc_detector_distance_peak_sorting_t peak_sorting);
 
-
 /**
  * @brief Get peak sorting method
  *
@@ -534,7 +525,6 @@ void acc_detector_distance_config_peak_sorting_set(acc_detector_distance_config_
  * @return The peak sorting method
  */
 acc_detector_distance_peak_sorting_t acc_detector_distance_config_peak_sorting_get(const acc_detector_distance_config_t *config);
-
 
 /**
  * @brief Set number of frames to use for recorded threshold
@@ -553,7 +543,6 @@ acc_detector_distance_peak_sorting_t acc_detector_distance_config_peak_sorting_g
  */
 void acc_detector_distance_config_num_frames_recorded_threshold_set(acc_detector_distance_config_t *config, uint16_t num_frames);
 
-
 /**
  * @brief Get number of frames to use for recorded threshold
  *
@@ -563,7 +552,6 @@ void acc_detector_distance_config_num_frames_recorded_threshold_set(acc_detector
  * @return The number of frames
  */
 uint16_t acc_detector_distance_config_num_frames_recorded_threshold_get(const acc_detector_distance_config_t *config);
-
 
 /**
  * @brief Set fixed amplitude threshold value
@@ -575,7 +563,6 @@ uint16_t acc_detector_distance_config_num_frames_recorded_threshold_get(const ac
  */
 void acc_detector_distance_config_fixed_amplitude_threshold_value_set(acc_detector_distance_config_t *config, float fixed_threshold_value);
 
-
 /**
  * @brief Get fixed amplitude threshold value
  *
@@ -585,7 +572,6 @@ void acc_detector_distance_config_fixed_amplitude_threshold_value_set(acc_detect
  * @return The fixed threshold value
  */
 float acc_detector_distance_config_fixed_amplitude_threshold_value_get(const acc_detector_distance_config_t *config);
-
 
 /**
  * @brief Set fixed strength threshold value
@@ -597,7 +583,6 @@ float acc_detector_distance_config_fixed_amplitude_threshold_value_get(const acc
  */
 void acc_detector_distance_config_fixed_strength_threshold_value_set(acc_detector_distance_config_t *config, float fixed_threshold_value);
 
-
 /**
  * @brief Get fixed strength threshold value
  *
@@ -607,7 +592,6 @@ void acc_detector_distance_config_fixed_strength_threshold_value_set(acc_detecto
  * @return The fixed threshold value
  */
 float acc_detector_distance_config_fixed_strength_threshold_value_get(const acc_detector_distance_config_t *config);
-
 
 /**
  * @brief Set threshold sensitivity
@@ -626,7 +610,6 @@ float acc_detector_distance_config_fixed_strength_threshold_value_get(const acc_
  */
 void acc_detector_distance_config_threshold_sensitivity_set(acc_detector_distance_config_t *config, float threshold_sensitivity);
 
-
 /**
  * @brief Get threshold sensitivity
  *
@@ -636,7 +619,6 @@ void acc_detector_distance_config_threshold_sensitivity_set(acc_detector_distanc
  * @return The threshold sensitivity
  */
 float acc_detector_distance_config_threshold_sensitivity_get(const acc_detector_distance_config_t *config);
-
 
 /**
  * @brief Set reflector shape
@@ -649,9 +631,8 @@ float acc_detector_distance_config_threshold_sensitivity_get(const acc_detector_
  * @param[out] config The Distance Detector configuration
  * @param[in] reflector_shape The reflector shape
  */
-void acc_detector_distance_config_reflector_shape_set(acc_detector_distance_config_t          *config,
+void acc_detector_distance_config_reflector_shape_set(acc_detector_distance_config_t         *config,
                                                       acc_detector_distance_reflector_shape_t reflector_shape);
-
 
 /**
  * @brief Get reflector shape
@@ -662,7 +643,6 @@ void acc_detector_distance_config_reflector_shape_set(acc_detector_distance_conf
  * @return The reflector shape
  */
 acc_detector_distance_reflector_shape_t acc_detector_distance_config_reflector_shape_get(const acc_detector_distance_config_t *config);
-
 
 /**
  * @}

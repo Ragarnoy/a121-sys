@@ -11,7 +11,7 @@ HEADER_PATH = "./include"
 
 FILES = {
     'acconeer_a121_stubs.c': ['acc_hal_definitions_a121.h', 'acc_definitions_common.h', 'acc_processing.h',
-                              'acc_sensor.h', 'acc_config.h', 'acc_alg_basic_utils.h', 'acc_config_subsweep.h',
+                              'acc_sensor.h', 'acc_config.h', 'acc_config_subsweep.h',
                               'acc_definitions_a121.h', 'acc_version.h', 'acc_rss_a121.h'],
     'acc_detector_distance_a121_stubs.c': ['acc_detector_distance_definitions.h', 'acc_detector_distance.h'],
     'acc_detector_presence_a121_stubs.c': ['acc_detector_presence.h'],
