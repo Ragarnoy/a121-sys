@@ -16,7 +16,7 @@ build = "build/mod.rs"
 [dependencies]
 
 [build-dependencies]
-bindgen = { version = "0.70.1" }
+bindgen = { version = "0.70" }
 cc = "1.1"
 
 [features]
@@ -24,6 +24,12 @@ stub_library = []
 distance = []
 presence = []
 std = []
+
+[package.metadata.docs.rs]
+all-features = true
+targets = ["thumbv7em-none-eabihf"]
+rustdoc-args = ["--cfg", "docsrs"]
+
 
 [profile.release]
 codegen-units = 1
