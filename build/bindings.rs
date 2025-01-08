@@ -51,6 +51,27 @@ pub fn generate_bindings(rss_path: &Path) -> Result<()> {
             }
         }
     }
+    else if target.contains("riscv32imac-esp-espidf") || target.contains("riscv32imc-esp-espidf") {  // TODO also include no_std targets (riscv32imac-unknown-none-elf and riscv32imc-unknown-none-elf)?
+        builder = builder
+            .clang_arg("--target=riscv32-esp-elf");
+
+        // Add sysroot includes
+        builder = builder
+            .clang_arg(format!("--sysroot={}", sysroot))
+            .clang_arg(format!("-I{}/include", sysroot));
+
+        // Add GCC includes
+        if let Ok(output) = Command::new("riscv32-esp-elf-gcc")
+            .args(["-print-libgcc-file-name"])
+            .output()
+        {
+            if let Ok(libgcc_path) = String::from_utf8(output.stdout) {
+                let libgcc_dir = Path::new(libgcc_path.trim()).parent().unwrap();
+                builder = builder.clang_arg(format!("-I{}/include", libgcc_dir.display()));
+                builder = builder.clang_arg(format!("-I{}/include-fixed", libgcc_dir.display()));
+            }
+        }
+    }
 
     // Add our headers path
     builder = builder.clang_arg(format!("-I{}", headers.display()));
@@ -73,14 +94,33 @@ pub fn generate_bindings(rss_path: &Path) -> Result<()> {
 }
 
 fn get_gcc_sysroot() -> Result<String> {
-    let output = Command::new("arm-none-eabi-gcc")
+    let target = env::var("TARGET").unwrap_or_default();
+
+    if target.contains("thumb") || target.contains("arm")
+    {
+        let output = Command::new("arm-none-eabi-gcc")
         .args(["-print-sysroot"])
         .output()
         .map_err(|e| BuildError::BindgenError(format!("Failed to get GCC sysroot: {}", e)))?;
 
-    String::from_utf8(output.stdout)
-        .map(|s| s.trim().to_string())
-        .map_err(|e| BuildError::BindgenError(format!("Invalid sysroot path: {}", e)))
+        String::from_utf8(output.stdout)
+            .map(|s| s.trim().to_string())
+            .map_err(|e| BuildError::BindgenError(format!("Invalid sysroot path: {}", e)))
+    }
+    else if target.contains("riscv32imac-esp-espidf") || target.contains("riscv32imc-esp-espidf") // TODO also include no_std targets (riscv32imac-unknown-none-elf and riscv32imc-unknown-none-elf)?
+    {
+        let output = Command::new("riscv32-esp-elf-gcc")
+        .args(["-print-sysroot"])
+        .output()
+        .map_err(|e| BuildError::BindgenError(format!("Failed to get GCC sysroot: {}", e)))?;
+
+        String::from_utf8(output.stdout)
+            .map(|s| s.trim().to_string())
+            .map_err(|e| BuildError::BindgenError(format!("Invalid sysroot path: {}", e)))
+    }
+    else {
+        Err(BuildError::BindgenError("Unsupported target".to_string()))
+    }
 }
 
 fn add_headers_to_bindings(mut bindings: Builder, headers: &Path) -> Result<Builder> {
