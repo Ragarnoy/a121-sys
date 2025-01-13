@@ -37,14 +37,22 @@ presence = []
 sudo apt-get install gcc-arm-none-eabi
 ```
 
-ESP targets require ESP toolchains, installable via espup (https://github.com/esp-rs/espup).
+ESP targets require ESP toolchains, install via the VSCode extension from espressif.
+Before you can build a121-sys, you need to set the environment variables by sourcing the applicable SDK, i.e.:
+```
+. ~/esp/v5.2.3/esp-idf/export.sh
+```
+Then make sure that the following gives you the correct sysroot path:
+```
+riscv32-esp-elf-gcc -print-sysroot
+```
 
 ## Supported Targets
 
 Support is dependent on the Acconeer A121 Static Library's availability:
 
 - arm-none-eabihf (gcc, armcc, armclang)
-- esp xtensa and riscv
+- esp riscv
 
 ## Getting Started
 
