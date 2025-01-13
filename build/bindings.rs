@@ -17,7 +17,7 @@ pub fn generate_bindings(rss_path: &Path) -> Result<()> {
 
     // Get GCC sysroot
     let sysroot = get_gcc_sysroot()?;
-
+    
     // Base bindgen configuration
     let mut builder = Builder::default()
         .use_core()
@@ -58,7 +58,8 @@ pub fn generate_bindings(rss_path: &Path) -> Result<()> {
         // Add sysroot includes
         builder = builder
             .clang_arg(format!("--sysroot={}", sysroot))
-            .clang_arg(format!("-I{}/include", sysroot));
+            .clang_arg(format!("-I{}/include", sysroot))
+            .clang_arg(format!("-I{}/riscv32-esp-elf/include", sysroot));
 
         // Add GCC includes
         if let Ok(output) = Command::new("riscv32-esp-elf-gcc")
