@@ -50,6 +50,28 @@ pub fn generate_bindings(rss_path: &Path) -> Result<()> {
                 builder = builder.clang_arg(format!("-I{}/include-fixed", libgcc_dir.display()));
             }
         }
+    } else if target.contains("riscv32imac-esp-espidf") || target.contains("riscv32imc-esp-espidf")
+    // TODO also include no_std targets (riscv32imac-unknown-none-elf and riscv32imc-unknown-none-elf)?
+    {
+        builder = builder.clang_arg("--target=riscv32-esp-elf");
+
+        // Add sysroot includes
+        builder = builder
+            .clang_arg(format!("--sysroot={}", sysroot))
+            .clang_arg(format!("-I{}/include", sysroot))
+            .clang_arg(format!("-I{}/riscv32-esp-elf/include", sysroot));
+
+        // Add GCC includes
+        if let Ok(output) = Command::new("riscv32-esp-elf-gcc")
+            .args(["-print-libgcc-file-name"])
+            .output()
+        {
+            if let Ok(libgcc_path) = String::from_utf8(output.stdout) {
+                let libgcc_dir = Path::new(libgcc_path.trim()).parent().unwrap();
+                builder = builder.clang_arg(format!("-I{}/include", libgcc_dir.display()));
+                builder = builder.clang_arg(format!("-I{}/include-fixed", libgcc_dir.display()));
+            }
+        }
     }
 
     // Add our headers path
@@ -73,14 +95,48 @@ pub fn generate_bindings(rss_path: &Path) -> Result<()> {
 }
 
 fn get_gcc_sysroot() -> Result<String> {
-    let output = Command::new("arm-none-eabi-gcc")
-        .args(["-print-sysroot"])
-        .output()
-        .map_err(|e| BuildError::BindgenError(format!("Failed to get GCC sysroot: {}", e)))?;
+    let target = env::var("TARGET").unwrap_or_default();
 
-    String::from_utf8(output.stdout)
-        .map(|s| s.trim().to_string())
-        .map_err(|e| BuildError::BindgenError(format!("Invalid sysroot path: {}", e)))
+    if target.contains("thumb") || target.contains("arm") {
+        let output = Command::new("arm-none-eabi-gcc")
+            .args(["-print-sysroot"])
+            .output()
+            .map_err(|e| BuildError::BindgenError(format!("Failed to get GCC sysroot: {}", e)))?;
+
+        String::from_utf8(output.stdout)
+            .map(|s| s.trim().to_string())
+            .map_err(|e| BuildError::BindgenError(format!("Invalid sysroot path: {}", e)))
+    } else if target.contains("riscv32imac-esp-espidf") || target.contains("riscv32imc-esp-espidf")
+    // TODO also include no_std targets (riscv32imac-unknown-none-elf and riscv32imc-unknown-none-elf)?
+    {
+        let output = Command::new("riscv32-esp-elf-gcc")
+            .args(["-print-sysroot"])
+            .output()
+            .map_err(|e| BuildError::BindgenError(format!("Failed to get GCC sysroot: {}", e)))?;
+
+        // NOTE: there seems to be a bug in v5.2.3 esp-idf where riscv32-esp-elf-gcc doesn't print a sysroot path - so we have to build it manually
+        if output.stdout == b"" {
+            let path_output = Command::new("which")
+                .args(["riscv32-esp-elf-gcc"])
+                .output()
+                .map_err(|e| {
+                    BuildError::BindgenError(format!("Failed to get path via which: {}", e))
+                })?;
+
+            let path_string = String::from_utf8(path_output.stdout)
+                .map_err(|e| BuildError::BindgenError(format!("Invalid path: {}", e)))?;
+
+            let path = Path::new(&path_string).parent().unwrap();
+            let path = path.join("../riscv32-esp-elf");
+            return Ok(path.to_string_lossy().to_string());
+        }
+
+        String::from_utf8(output.stdout)
+            .map(|s| s.trim().to_string())
+            .map_err(|e| BuildError::BindgenError(format!("Invalid sysroot path: {}", e)))
+    } else {
+        Err(BuildError::BindgenError("Unsupported target".to_string()))
+    }
 }
 
 fn add_headers_to_bindings(mut bindings: Builder, headers: &Path) -> Result<Builder> {
@@ -113,6 +169,9 @@ fn add_log_wrapper(mut bindings: Builder) -> Result<Builder> {
             .flag("-mthumb")
             .flag("-mfloat-abi=hard")
             .flag("-mfpu=fpv4-sp-d16");
+    } else if target.contains("riscv32imac-esp-espidf") || target.contains("riscv32imc-esp-espidf")
+    {
+        build.compiler("riscv32-esp-elf-gcc");
     }
 
     build
