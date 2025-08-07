@@ -19,7 +19,12 @@ pub fn generate_stubs(rss_path: &Path, out_dir: &Path) -> Result<()> {
     generate_stub_libraries(out_dir, &include_dir)?;
 
     // Validate the generated libraries if the tools are available
-    if Command::new("arm-none-eabi-nm").output().is_ok() {
+    let nm_tool = if cfg!(target_arch = "arm") {
+        "arm-none-eabi-nm"
+    } else {
+        "nm"
+    };
+    if Command::new(nm_tool).output().is_ok() {
         validate_stub_libraries(out_dir)?;
     }
 
@@ -69,32 +74,48 @@ fn compile_and_archive(
     let obj_path = out_dir.join(obj_file_name);
     let lib_path = out_dir.join(lib_name);
 
+    // Choose compiler based on target architecture
+    let (compiler, archiver, compile_args) = if cfg!(target_arch = "arm") {
+        (
+            "arm-none-eabi-gcc",
+            "arm-none-eabi-ar",
+            vec![
+                "-mcpu=cortex-m4",
+                "-mthumb",
+                "-mfloat-abi=hard",
+                "-mfpu=fpv4-sp-d16",
+                "-DTARGET_ARCH_cm4",
+                "-DFLOAT_ABI_HARD",
+            ],
+        )
+    } else {
+        ("cc", "ar", vec![])
+    };
+
+    // Common compile arguments
+    let mut args = vec![
+        "-c",
+        source_path.to_str().unwrap(),
+        "-o",
+        obj_path.to_str().unwrap(),
+        "-I",
+        include_dir.to_str().unwrap(),
+        "-std=c99",
+        "-MMD",
+        "-MP",
+        "-O2",
+        "-g",
+        "-fno-math-errno",
+        "-ffunction-sections",
+        "-fdata-sections",
+    ];
+
+    // Add architecture-specific args
+    args.extend(compile_args);
+
     // Compile the source file
-    let status = Command::new("arm-none-eabi-gcc")
-        .args([
-            "-c",
-            source_path.to_str().unwrap(),
-            "-o",
-            obj_path.to_str().unwrap(),
-            "-I",
-            include_dir.to_str().unwrap(),
-            "-mcpu=cortex-m4",
-            "-mthumb",
-            "-mfloat-abi=hard",
-            "-mfpu=fpv4-sp-d16",
-            "-DTARGET_ARCH_cm4",
-            "-DFLOAT_ABI_HARD",
-            "-std=c99",
-            "-MMD",
-            "-MP",
-            "-O2",
-            "-g",
-            "-fno-math-errno",
-            "-ffunction-sections",
-            "-fdata-sections",
-            "-flto=auto",
-            "-ffat-lto-objects",
-        ])
+    let status = Command::new(compiler)
+        .args(&args)
         .status()
         .map_err(|e| BuildError::CompilationError(e.to_string()))?;
 
@@ -106,7 +127,7 @@ fn compile_and_archive(
     }
 
     // Create archive
-    let status = Command::new("arm-none-eabi-ar")
+    let status = Command::new(archiver)
         .args([
             "rcs",
             lib_path.to_str().unwrap(),
@@ -141,13 +162,15 @@ fn validate_stub_libraries(out_dir: &Path) -> Result<()> {
 
 fn validate_stub_library(out_dir: &Path, lib_name: &str) -> Result<()> {
     let lib_path = out_dir.join(lib_name);
+    let nm_tool = if cfg!(target_arch = "arm") {
+        "arm-none-eabi-nm"
+    } else {
+        "nm"
+    };
 
-    let output = Command::new("arm-none-eabi-nm")
-        .arg(&lib_path)
-        .output()
-        .map_err(|e| {
-            BuildError::StubGenerationFailed(format!("Failed to run nm on {}: {}", lib_name, e))
-        })?;
+    let output = Command::new(nm_tool).arg(&lib_path).output().map_err(|e| {
+        BuildError::StubGenerationFailed(format!("Failed to run nm on {}: {}", lib_name, e))
+    })?;
 
     if !output.status.success() {
         return Err(BuildError::StubGenerationFailed(format!(
