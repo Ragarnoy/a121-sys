@@ -1,4 +1,4 @@
-// Copyright (c) Acconeer AB, 2022-2024
+// Copyright (c) Acconeer AB, 2022-2025
 // All rights reserved
 
 #ifndef ACC_DETECTOR_PRESENCE_H_
@@ -120,6 +120,15 @@ typedef struct
 	 * NOTE! Only valid if automatic_subsweeps is disabled
 	 */
 	acc_config_profile_t profile;
+	/**
+	 * The sensor_config used
+	 */
+	const acc_config_t *sensor_config;
+
+	/**
+	 * Metadata for the processing result
+	 */
+	acc_processing_metadata_t *processing_metadata;
 } acc_detector_presence_metadata_t;
 
 /**

@@ -1,9 +1,9 @@
 use crate::error::{BuildError, Result};
+use bindgen::callbacks::ItemInfo;
 use bindgen::Builder;
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
-use bindgen::callbacks::ItemInfo;
 
 #[derive(Debug)]
 struct CFunctionDecl {

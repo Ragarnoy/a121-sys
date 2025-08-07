@@ -46,8 +46,8 @@ pub fn generate_bindings(rss_path: &Path) -> Result<()> {
         for path in include_paths {
             builder = builder.clang_arg(format!("-isystem{}", path.display()));
         }
-
-    } else if target.contains("riscv32imac-esp-espidf") || target.contains("riscv32imc-esp-espidf") {
+    } else if target.contains("riscv32imac-esp-espidf") || target.contains("riscv32imc-esp-espidf")
+    {
         let sysroot = get_riscv_sysroot()?;
 
         builder = builder
@@ -196,7 +196,9 @@ fn get_riscv_sysroot() -> Result<String> {
         let path_output = Command::new("which")
             .args(["riscv32-esp-elf-gcc"])
             .output()
-            .map_err(|e| BuildError::BindgenError(format!("Failed to get path via which: {}", e)))?;
+            .map_err(|e| {
+                BuildError::BindgenError(format!("Failed to get path via which: {}", e))
+            })?;
 
         let path_string = String::from_utf8(path_output.stdout)
             .map_err(|e| BuildError::BindgenError(format!("Invalid path: {}", e)))?;
@@ -243,7 +245,8 @@ fn add_log_wrapper(mut bindings: Builder) -> Result<Builder> {
             .flag("-mthumb")
             .flag("-mfloat-abi=hard")
             .flag("-mfpu=fpv4-sp-d16");
-    } else if target.contains("riscv32imac-esp-espidf") || target.contains("riscv32imc-esp-espidf") {
+    } else if target.contains("riscv32imac-esp-espidf") || target.contains("riscv32imc-esp-espidf")
+    {
         build.compiler("riscv32-esp-elf-gcc");
     }
 
