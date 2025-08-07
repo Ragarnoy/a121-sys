@@ -1,11 +1,10 @@
-// Copyright (c) Acconeer AB, 2022-2024
+// Copyright (c) Acconeer AB, 2022-2025
 // All rights reserved
 
 #ifndef ACC_DEFINITIONS_A121_H_
 #define ACC_DEFINITIONS_A121_H_
 
 #include <stdint.h>
-
 
 /**
  * @defgroup definitions Definitions
@@ -15,11 +14,10 @@
  * @{
  */
 
-
 /**
  * @brief The size of a sensor calibration result
  */
-#define ACC_CAL_RESULT_DATA_SIZE (192)
+#define ACC_CAL_RESULT_DATA_SIZE (240)
 
 /**
  * @brief The maximum number of subsweeps in a configuration.
@@ -42,7 +40,6 @@ typedef struct
 	int16_t temperature;
 } acc_cal_info_t;
 
-
 /**
  * @brief Profile
  *
@@ -59,7 +56,6 @@ typedef enum
 	/*! The profile with the lowest depth resolution and highest radar loop gain. */
 	ACC_CONFIG_PROFILE_5,
 } acc_config_profile_t;
-
 
 /**
  * @brief Idle state
@@ -79,7 +75,6 @@ typedef enum
 	/*! The shallowest state where most of the sensor hardware is kept on. */
 	ACC_CONFIG_IDLE_STATE_READY,
 } acc_config_idle_state_t;
-
 
 /**
  * @brief Pulse Repetition Frequency
@@ -129,10 +124,8 @@ typedef enum
 	ACC_CONFIG_PRF_5_2_MHZ,
 } acc_config_prf_t;
 
-
 /**
  * @}
  */
-
 
 #endif

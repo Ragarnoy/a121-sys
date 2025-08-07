@@ -3,6 +3,7 @@ use bindgen::Builder;
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
+use bindgen::callbacks::ItemInfo;
 
 #[derive(Debug)]
 struct CFunctionDecl {
@@ -17,7 +18,7 @@ struct FunctionCollector {
 }
 
 impl bindgen::callbacks::ParseCallbacks for FunctionCollector {
-    fn item_name(&self, _name: &str) -> Option<String> {
+    fn item_name(&self, _name: ItemInfo) -> Option<String> {
         None
     }
 

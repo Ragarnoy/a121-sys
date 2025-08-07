@@ -9,15 +9,15 @@ categories = ["embedded", "no-std"]
 readme = "README.md"
 license = "MIT"
 edition = "2021"
-version = "0.5.0"
+version = "0.6.0"
 rust-version = "1.82"
 build = "build/mod.rs"
 
 [dependencies]
 
 [build-dependencies]
-bindgen = { version = "0.71" }
-cc = "1.1"
+bindgen = { version = "0.72" }
+cc = "1.2"
 
 [features]
 stub_library = []
