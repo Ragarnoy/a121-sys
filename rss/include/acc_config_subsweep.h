@@ -1,4 +1,4 @@
-// Copyright (c) Acconeer AB, 2021-2023
+// Copyright (c) Acconeer AB, 2021-2025
 // All rights reserved
 
 #ifndef ACC_CONFIG_SUBSWEEP_H_
@@ -26,7 +26,6 @@
  */
 void acc_config_num_subsweeps_set(acc_config_t *config, uint8_t num_subsweeps);
 
-
 /**
  * @brief Get the number of subsweeps to use
  *
@@ -34,7 +33,6 @@ void acc_config_num_subsweeps_set(acc_config_t *config, uint8_t num_subsweeps);
  * @return The number of subsweeps
  */
 uint8_t acc_config_num_subsweeps_get(const acc_config_t *config);
-
 
 /**
  * @brief Set the starting point of the sweep
@@ -47,7 +45,6 @@ uint8_t acc_config_num_subsweeps_get(const acc_config_t *config);
  */
 void acc_config_subsweep_start_point_set(acc_config_t *config, int32_t start_point, uint8_t index);
 
-
 /**
  * @brief Get the starting point of the sweep
  *
@@ -58,7 +55,6 @@ void acc_config_subsweep_start_point_set(acc_config_t *config, int32_t start_poi
  * @return The starting point of the sweep
  */
 int32_t acc_config_subsweep_start_point_get(const acc_config_t *config, uint8_t index);
-
 
 /**
  * @brief Set the number of data points to measure
@@ -71,7 +67,6 @@ int32_t acc_config_subsweep_start_point_get(const acc_config_t *config, uint8_t 
  */
 void acc_config_subsweep_num_points_set(acc_config_t *config, uint16_t num_points, uint8_t index);
 
-
 /**
  * @brief Get the number of data points to measure
  *
@@ -82,7 +77,6 @@ void acc_config_subsweep_num_points_set(acc_config_t *config, uint16_t num_point
  * @return Number of data points to measure
  */
 uint16_t acc_config_subsweep_num_points_get(const acc_config_t *config, uint8_t index);
-
 
 /**
  * @brief Set the step length in a sweep
@@ -95,7 +89,6 @@ uint16_t acc_config_subsweep_num_points_get(const acc_config_t *config, uint8_t 
  */
 void acc_config_subsweep_step_length_set(acc_config_t *config, uint16_t step_length, uint8_t index);
 
-
 /**
  * @brief Get the step length in a sweep
  *
@@ -106,7 +99,6 @@ void acc_config_subsweep_step_length_set(acc_config_t *config, uint16_t step_len
  * @return The step length
  */
 uint16_t acc_config_subsweep_step_length_get(const acc_config_t *config, uint8_t index);
-
 
 /**
  * @brief Set a profile
@@ -119,7 +111,6 @@ uint16_t acc_config_subsweep_step_length_get(const acc_config_t *config, uint8_t
  */
 void acc_config_subsweep_profile_set(acc_config_t *config, acc_config_profile_t profile, uint8_t index);
 
-
 /**
  * @brief Get the currently used profile
  *
@@ -130,7 +121,6 @@ void acc_config_subsweep_profile_set(acc_config_t *config, acc_config_profile_t 
  * @return The current profile, 0 if config is invalid
  */
 acc_config_profile_t acc_config_subsweep_profile_get(const acc_config_t *config, uint8_t index);
-
 
 /**
  * @brief Set the hardware accelerated average samples (HWAAS)
@@ -143,7 +133,6 @@ acc_config_profile_t acc_config_subsweep_profile_get(const acc_config_t *config,
  */
 void acc_config_subsweep_hwaas_set(acc_config_t *config, uint16_t hwaas, uint8_t index);
 
-
 /**
  * @brief Get the hardware accelerated average samples (HWAAS)
  *
@@ -154,7 +143,6 @@ void acc_config_subsweep_hwaas_set(acc_config_t *config, uint16_t hwaas, uint8_t
  * @return Hardware accelerated average samples
  */
 uint16_t acc_config_subsweep_hwaas_get(const acc_config_t *config, uint8_t index);
-
 
 /**
  * @brief Set receiver gain setting
@@ -167,7 +155,6 @@ uint16_t acc_config_subsweep_hwaas_get(const acc_config_t *config, uint8_t index
  */
 void acc_config_subsweep_receiver_gain_set(acc_config_t *config, uint8_t gain, uint8_t index);
 
-
 /**
  * @brief Get receiver gain setting
  *
@@ -178,7 +165,6 @@ void acc_config_subsweep_receiver_gain_set(acc_config_t *config, uint8_t gain, u
  * @return Receiver gain setting
  */
 uint8_t acc_config_subsweep_receiver_gain_get(const acc_config_t *config, uint8_t index);
-
 
 /**
  * @brief Enable or disable the transmitter
@@ -191,7 +177,6 @@ uint8_t acc_config_subsweep_receiver_gain_get(const acc_config_t *config, uint8_
  */
 void acc_config_subsweep_enable_tx_set(acc_config_t *config, bool enable, uint8_t index);
 
-
 /**
  * @brief Get transmitter enable mode
  *
@@ -202,7 +187,6 @@ void acc_config_subsweep_enable_tx_set(acc_config_t *config, bool enable, uint8_
  * @return true if the transmitter is enabled
  */
 bool acc_config_subsweep_enable_tx_get(const acc_config_t *config, uint8_t index);
-
 
 /**
  * @brief Set Pulse Repetition Frequency
@@ -215,7 +199,6 @@ bool acc_config_subsweep_enable_tx_get(const acc_config_t *config, uint8_t index
  */
 void acc_config_subsweep_prf_set(acc_config_t *config, acc_config_prf_t prf, uint8_t index);
 
-
 /**
  * @brief Get Pulse Repetition Frequency
  *
@@ -226,7 +209,6 @@ void acc_config_subsweep_prf_set(acc_config_t *config, acc_config_prf_t prf, uin
  * @param[in] index The subsweep index
  */
 acc_config_prf_t acc_config_subsweep_prf_get(const acc_config_t *config, uint8_t index);
-
 
 /**
  * @brief Set the phase enhancement enabled configuration
@@ -239,7 +221,6 @@ acc_config_prf_t acc_config_subsweep_prf_get(const acc_config_t *config, uint8_t
  */
 void acc_config_subsweep_phase_enhancement_set(acc_config_t *config, bool enable, uint8_t index);
 
-
 /**
  * @brief Get the phase enhancement enabled configuration
  *
@@ -251,6 +232,25 @@ void acc_config_subsweep_phase_enhancement_set(acc_config_t *config, bool enable
  */
 bool acc_config_subsweep_phase_enhancement_get(const acc_config_t *config, uint8_t index);
 
+/**
+ * @brief Enable or disable the IQ imbalance compensation
+ *
+ * @param[in] config The configuration
+ * @param[in] enable true if IQ imbalance compensation should be enabled, false otherwise
+ * @param[in] index The subsweep index
+ */
+void acc_config_subsweep_iq_imbalance_compensation_set(acc_config_t *config, bool enable, uint8_t index);
+
+/**
+ * @brief Get the IQ imbalance compensation configuration
+ *
+ * See @ref acc_config_iq_imbalance_compensation_set
+ *
+ * @param[in] config The configuration
+ * @param[in] index The subsweep index
+ * @return true if IQ imbalance compensation is enabled, false otherwise
+ */
+bool acc_config_subsweep_iq_imbalance_compensation_get(const acc_config_t *config, uint8_t index);
 
 /**
  * @brief Set the loopback enabled configuration
@@ -263,7 +263,6 @@ bool acc_config_subsweep_phase_enhancement_get(const acc_config_t *config, uint8
  */
 void acc_config_subsweep_enable_loopback_set(acc_config_t *config, bool enable, uint8_t index);
 
-
 /**
  * @brief Get the enable loopback configuration
  *
@@ -275,10 +274,8 @@ void acc_config_subsweep_enable_loopback_set(acc_config_t *config, bool enable, 
  */
 bool acc_config_subsweep_enable_loopback_get(const acc_config_t *config, uint8_t index);
 
-
 /**
  * @}
  */
-
 
 #endif

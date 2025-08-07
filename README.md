@@ -5,7 +5,7 @@
 [![crates.io](https://img.shields.io/crates/d/a121-sys.svg)](https://crates.io/crates/a121-sys)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Current bindings version: 1.8.*
+## Current bindings version: 1.11.*
 
 
 `a121-sys` is a Rust crate offering raw bindings for interfacing with the Acconeer A121 V-Band radar sensor. Designed for embedded systems, it provides low-level access to the sensor's functionalities, enabling the development of high-level abstractions in a `no_std` environment.

@@ -1,4 +1,4 @@
-// Copyright (c) Acconeer AB, 2022-2024
+// Copyright (c) Acconeer AB, 2022-2025
 // All rights reserved
 
 #ifndef ACC_DETECTOR_DISTANCE_H_
@@ -15,7 +15,6 @@
 
 /**
  * @defgroup Distance Distance Detector
- * @ingroup Detectors
  *
  * @brief Distance Detector API description
  *
@@ -372,29 +371,6 @@ void acc_detector_distance_config_max_step_length_set(acc_detector_distance_conf
  * @return The maximum step length
  */
 uint16_t acc_detector_distance_config_max_step_length_get(const acc_detector_distance_config_t *config);
-/**
- * @brief Override automatically set PRF
- *
- * Makes it possible to manually set the PRF used when measuring
- *
- * See @ref acc_config_prf_t for details.
- *
- * @param[in] config The Distance Detector configuration
- * @param[in] override true to enable override, false to disable
- * @param[in] prf The Pulse Repetition Frequency to use
- */
-void acc_detector_distance_config_prf_override_set(acc_detector_distance_config_t *config, bool override, acc_config_prf_t prf);
-
-/**
- * @brief Get if PRF override is set and its value
- *
- * See @ref acc_detector_distance_config_prf_override_set
- *
- * @param[in] config The Distance Detector configuration
- * @param[out] override true to enable override, false to disable
- * @param[out] prf The Pulse Repetition Frequency to use
- */
-void acc_detector_distance_config_prf_override_get(const acc_detector_distance_config_t *config, bool *override, acc_config_prf_t *prf);
 
 /**
  * @brief Enable close range leakage cancellation

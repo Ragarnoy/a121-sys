@@ -1,4 +1,4 @@
-// Copyright (c) Acconeer AB, 2020-2024
+// Copyright (c) Acconeer AB, 2020-2025
 // All rights reserved
 
 #ifndef ACC_CONFIG_H_
@@ -10,7 +10,6 @@
 #include "acc_definitions_a121.h"
 #include "acc_definitions_common.h"
 
-
 /**
  * @defgroup config Config
  * @ingroup service
@@ -20,11 +19,9 @@
  * @{
  */
 
-
 struct acc_config;
 
 typedef struct acc_config acc_config_t;
-
 
 /**
  * @brief Create a configuration
@@ -35,7 +32,6 @@ typedef struct acc_config acc_config_t;
  */
 acc_config_t *acc_config_create(void);
 
-
 /**
  * @brief Destroy a configuration freeing any resources allocated
  *
@@ -45,14 +41,12 @@ acc_config_t *acc_config_create(void);
  */
 void acc_config_destroy(acc_config_t *config);
 
-
 /**
  * @brief Print a configuration to the log
  *
  * @param[in] config The configuration to log
  */
 void acc_config_log(const acc_config_t *config);
-
 
 /**
  * @brief Set the starting point of the sweep
@@ -66,7 +60,6 @@ void acc_config_log(const acc_config_t *config);
  */
 void acc_config_start_point_set(acc_config_t *config, int32_t start_point);
 
-
 /**
  * @brief Get the starting point of the sweep
  *
@@ -76,7 +69,6 @@ void acc_config_start_point_set(acc_config_t *config, int32_t start_point);
  * @return The starting point of the sweep
  */
 int32_t acc_config_start_point_get(const acc_config_t *config);
-
 
 /**
  * @brief Set the number of data points to measure
@@ -88,7 +80,6 @@ int32_t acc_config_start_point_get(const acc_config_t *config);
  */
 void acc_config_num_points_set(acc_config_t *config, uint16_t num_points);
 
-
 /**
  * @brief Get the number of data points to measure
  *
@@ -98,7 +89,6 @@ void acc_config_num_points_set(acc_config_t *config, uint16_t num_points);
  * @return Number of data points to measure
  */
 uint16_t acc_config_num_points_get(const acc_config_t *config);
-
 
 /**
  * @brief Set the step length in a sweep
@@ -123,7 +113,6 @@ uint16_t acc_config_num_points_get(const acc_config_t *config);
  */
 void acc_config_step_length_set(acc_config_t *config, uint16_t step_length);
 
-
 /**
  * @brief Get the step length in a sweep
  *
@@ -133,7 +122,6 @@ void acc_config_step_length_set(acc_config_t *config, uint16_t step_length);
  * @return The step length
  */
 uint16_t acc_config_step_length_get(const acc_config_t *config);
-
 
 /**
  * @brief Set a profile
@@ -145,9 +133,7 @@ uint16_t acc_config_step_length_get(const acc_config_t *config);
  * @param[in] config The config to set a profile for
  * @param[in] profile The profile to set
  */
-void acc_config_profile_set(acc_config_t         *config,
-                            acc_config_profile_t profile);
-
+void acc_config_profile_set(acc_config_t *config, acc_config_profile_t profile);
 
 /**
  * @brief Get the currently used profile
@@ -158,7 +144,6 @@ void acc_config_profile_set(acc_config_t         *config,
  * @return The profile currently used
  */
 acc_config_profile_t acc_config_profile_get(const acc_config_t *config);
-
 
 /**
  * @brief Set the hardware accelerated average samples (HWAAS)
@@ -175,7 +160,6 @@ acc_config_profile_t acc_config_profile_get(const acc_config_t *config);
  */
 void acc_config_hwaas_set(acc_config_t *config, uint16_t hwaas);
 
-
 /**
  * @brief Get the hardware accelerated average samples (HWAAS)
  *
@@ -185,7 +169,6 @@ void acc_config_hwaas_set(acc_config_t *config, uint16_t hwaas);
  * @return Hardware accelerated average samples
  */
 uint16_t acc_config_hwaas_get(const acc_config_t *config);
-
 
 /**
  * @brief Set receiver gain setting
@@ -200,7 +183,6 @@ uint16_t acc_config_hwaas_get(const acc_config_t *config);
  */
 void acc_config_receiver_gain_set(acc_config_t *config, uint8_t gain);
 
-
 /**
  * @brief Get receiver gain setting
  *
@@ -210,7 +192,6 @@ void acc_config_receiver_gain_set(acc_config_t *config, uint8_t gain);
  * @return Receiver gain setting
  */
 uint8_t acc_config_receiver_gain_get(const acc_config_t *config);
-
 
 /**
  * @brief Set sweeps per frame
@@ -223,7 +204,6 @@ uint8_t acc_config_receiver_gain_get(const acc_config_t *config);
  */
 void acc_config_sweeps_per_frame_set(acc_config_t *config, uint16_t sweeps);
 
-
 /**
  * @brief Get the number of sweeps per frame
  *
@@ -233,7 +213,6 @@ void acc_config_sweeps_per_frame_set(acc_config_t *config, uint16_t sweeps);
  * @return Sweeps per frame
  */
 uint16_t acc_config_sweeps_per_frame_get(const acc_config_t *config);
-
 
 /**
  * @brief Set the sweep rate
@@ -245,7 +224,6 @@ uint16_t acc_config_sweeps_per_frame_get(const acc_config_t *config);
  */
 void acc_config_sweep_rate_set(acc_config_t *config, float sweep_rate);
 
-
 /**
  * @brief Get the sweep rate
  *
@@ -255,7 +233,6 @@ void acc_config_sweep_rate_set(acc_config_t *config, float sweep_rate);
  * @return Sweep rate in Hz
  */
 float acc_config_sweep_rate_get(const acc_config_t *config);
-
 
 /**
  * @brief Set continuous sweep mode
@@ -273,7 +250,6 @@ float acc_config_sweep_rate_get(const acc_config_t *config);
  */
 void acc_config_continuous_sweep_mode_set(acc_config_t *config, bool enabled);
 
-
 /**
  * @brief Get continuous sweep mode
  *
@@ -283,7 +259,6 @@ void acc_config_continuous_sweep_mode_set(acc_config_t *config, bool enabled);
  * @return true if continuous sweep mode is enabled, false otherwise
  */
 bool acc_config_continuous_sweep_mode_get(const acc_config_t *config);
-
 
 /**
  * @brief Set the frame rate
@@ -298,7 +273,6 @@ bool acc_config_continuous_sweep_mode_get(const acc_config_t *config);
  */
 void acc_config_frame_rate_set(acc_config_t *config, float frame_rate);
 
-
 /**
  * @brief Get the frame rate
  *
@@ -308,7 +282,6 @@ void acc_config_frame_rate_set(acc_config_t *config, float frame_rate);
  * @return Frame rate
  */
 float acc_config_frame_rate_get(const acc_config_t *config);
-
 
 /**
  * @brief Enable or disable the transmitter
@@ -321,7 +294,6 @@ float acc_config_frame_rate_get(const acc_config_t *config);
  */
 void acc_config_enable_tx_set(acc_config_t *config, bool enable);
 
-
 /**
  * @brief Get transmitter enable configuration
  *
@@ -331,7 +303,6 @@ void acc_config_enable_tx_set(acc_config_t *config, bool enable);
  * @return true if the transmitter is enabled, false if it is disabled
  */
 bool acc_config_enable_tx_get(const acc_config_t *config);
-
 
 /**
  * @brief Set inter frame idle state
@@ -347,7 +318,6 @@ bool acc_config_enable_tx_get(const acc_config_t *config);
  */
 void acc_config_inter_frame_idle_state_set(acc_config_t *config, acc_config_idle_state_t idle_state);
 
-
 /**
  * @brief Get inter frame idle state
  *
@@ -357,7 +327,6 @@ void acc_config_inter_frame_idle_state_set(acc_config_t *config, acc_config_idle
  * @return The idle state to use between frames
  */
 acc_config_idle_state_t acc_config_inter_frame_idle_state_get(const acc_config_t *config);
-
 
 /**
  * @brief Set inter sweep idle state
@@ -371,7 +340,6 @@ acc_config_idle_state_t acc_config_inter_frame_idle_state_get(const acc_config_t
  */
 void acc_config_inter_sweep_idle_state_set(acc_config_t *config, acc_config_idle_state_t idle_state);
 
-
 /**
  * @brief Get inter sweep idle state
  *
@@ -381,7 +349,6 @@ void acc_config_inter_sweep_idle_state_set(acc_config_t *config, acc_config_idle
  * @return The idle state to use between sweeps within a frame
  */
 acc_config_idle_state_t acc_config_inter_sweep_idle_state_get(const acc_config_t *config);
-
 
 /**
  * @brief Set Pulse Repetition Frequency
@@ -393,7 +360,6 @@ acc_config_idle_state_t acc_config_inter_sweep_idle_state_get(const acc_config_t
  */
 void acc_config_prf_set(acc_config_t *config, acc_config_prf_t prf);
 
-
 /**
  * @brief Get Pulse Repetition Frequency
  *
@@ -403,7 +369,6 @@ void acc_config_prf_set(acc_config_t *config, acc_config_prf_t prf);
  * @return Pulse Repetition Frequency
  */
 acc_config_prf_t acc_config_prf_get(const acc_config_t *config);
-
 
 /**
  * @brief Enable or disable phase enhancement
@@ -418,7 +383,6 @@ acc_config_prf_t acc_config_prf_get(const acc_config_t *config);
  */
 void acc_config_phase_enhancement_set(acc_config_t *config, bool enable);
 
-
 /**
  * @brief Get the phase enhancement configuration
  *
@@ -429,6 +393,23 @@ void acc_config_phase_enhancement_set(acc_config_t *config, bool enable);
  */
 bool acc_config_phase_enhancement_get(const acc_config_t *config);
 
+/**
+ * @brief Enable or disable the IQ imbalance compensation
+ *
+ * @param[in] config The configuration
+ * @param[in] enable true if IQ imbalance compensation should be enabled, false otherwise
+ */
+void acc_config_iq_imbalance_compensation_set(acc_config_t *config, bool enable);
+
+/**
+ * @brief Get the IQ imbalance compensation configuration
+ *
+ * See @ref acc_config_iq_imbalance_compensation_set
+ *
+ * @param[in] config The configuration
+ * @return true if IQ imbalance compensation is enabled, false otherwise
+ */
+bool acc_config_iq_imbalance_compensation_get(const acc_config_t *config);
 
 /**
  * @brief Enable or disable loopback
@@ -441,7 +422,6 @@ bool acc_config_phase_enhancement_get(const acc_config_t *config);
  */
 void acc_config_enable_loopback_set(acc_config_t *config, bool enable);
 
-
 /**
  * @brief Get the enable loopback configuration
  *
@@ -451,7 +431,6 @@ void acc_config_enable_loopback_set(acc_config_t *config, bool enable);
  * @return true if loopback is enabled, false otherwise
  */
 bool acc_config_enable_loopback_get(const acc_config_t *config);
-
 
 /**
  * @brief Enable or disable double buffering
@@ -469,7 +448,6 @@ bool acc_config_enable_loopback_get(const acc_config_t *config);
  */
 void acc_config_double_buffering_set(acc_config_t *config, bool enable);
 
-
 /**
  * @brief Get the double buffering configuration
  *
@@ -480,10 +458,8 @@ void acc_config_double_buffering_set(acc_config_t *config, bool enable);
  */
 bool acc_config_double_buffering_get(const acc_config_t *config);
 
-
 /**
  * @}
  */
-
 
 #endif

@@ -1,4 +1,5 @@
 use crate::error::{BuildError, Result};
+use bindgen::callbacks::ItemInfo;
 use bindgen::Builder;
 use std::collections::HashMap;
 use std::fs;
@@ -17,7 +18,7 @@ struct FunctionCollector {
 }
 
 impl bindgen::callbacks::ParseCallbacks for FunctionCollector {
-    fn item_name(&self, _name: &str) -> Option<String> {
+    fn item_name(&self, _name: ItemInfo) -> Option<String> {
         None
     }
 
