@@ -16,6 +16,7 @@ name: rolling
 env:
   CARGO_TERM_COLOR: always
   ACC_RSS_LIBS: "/home/runner/work/a121-sys/a121-sys/staticlibs"
+  LIBCLANG_PATH: "/usr/lib/llvm-14/lib"
 
 jobs:
   nightly:
@@ -25,16 +26,32 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
+
       - name: Install nightly
         uses: dtolnay/rust-toolchain@nightly
         with:
           targets: thumbv7em-none-eabihf
+          components: rustfmt
+
       - name: Install ARM toolchain
         uses: carlosperate/arm-none-eabi-gcc-action@v1
         with:
           release: '9-2020-q2'
+
+      - name: Install LLVM and Clang
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y llvm-14-dev libclang-14-dev clang-14
+
       - name: Create lib directory
         run: mkdir -p "$ACC_RSS_LIBS"
+
+      - name: Setup ARM GCC paths
+        run: |
+          GCC_ARM_PATH=$(dirname $(dirname $(which arm-none-eabi-gcc)))
+          echo "ARM_GCC_PATH=${GCC_ARM_PATH}" >> $GITHUB_ENV
+          echo "CPATH=${GCC_ARM_PATH}/arm-none-eabi/include:${GCC_ARM_PATH}/lib/gcc/arm-none-eabi/9.2.1/include" >> $GITHUB_ENV
+
       - name: cargo check
         run: cargo check --target thumbv7em-none-eabihf --features="stub_library,distance,presence"
         env:
@@ -48,18 +65,34 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
+
       - name: Install beta
         uses: dtolnay/rust-toolchain@beta
         with:
           targets: thumbv7em-none-eabihf
+
       - name: Install ARM toolchain
         uses: carlosperate/arm-none-eabi-gcc-action@v1
         with:
           release: '9-2020-q2'
+
+      - name: Install LLVM and Clang
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y llvm-14-dev libclang-14-dev clang-14
+
       - name: Create lib directory
         run: mkdir -p "$ACC_RSS_LIBS"
+
+      - name: Setup ARM GCC paths
+        run: |
+          GCC_ARM_PATH=$(dirname $(dirname $(which arm-none-eabi-gcc)))
+          echo "ARM_GCC_PATH=${GCC_ARM_PATH}" >> $GITHUB_ENV
+          echo "CPATH=${GCC_ARM_PATH}/arm-none-eabi/include:${GCC_ARM_PATH}/lib/gcc/arm-none-eabi/9.2.1/include" >> $GITHUB_ENV
+
       - name: cargo update
         run: cargo update
+
       - name: cargo check
         run: cargo check --target thumbv7em-none-eabihf --features="stub_library,distance,presence"
         env:
