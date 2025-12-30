@@ -208,6 +208,17 @@ bool acc_detector_presence_prepare(const acc_detector_presence_handle_t *presenc
                                    uint32_t                              buffer_size);
 
 /**
+ * @brief Reset internal filters
+ *
+ * This is the same operation that is performed on every prepare if
+ * "reset filters on prepare" is set to true
+ * See @ref acc_detector_presence_config_reset_filters_on_prepare_set.
+ *
+ * @param[in] presence_handle The presence detector handle for which to reset filters
+ */
+void acc_detector_presence_reset_filters(const acc_detector_presence_handle_t *presence_handle);
+
+/**
  * @brief Process the data according to the configuration used in @ref acc_detector_presence_config_create
  *
  * @param[in] presence_handle The presence detector handle for the presence detector to get the next result for
@@ -522,26 +533,6 @@ void acc_detector_presence_config_inter_frame_presence_timeout_set(acc_detector_
  * @return Inter-frame presence timeout in s
  */
 uint16_t acc_detector_presence_config_inter_frame_presence_timeout_get(const acc_detector_presence_config_t *presence_config);
-
-/**
- * @brief Set inter-frame phase boost
- *
- * Used to increase detection of slow motions by utilizing the phase information in the Sparse IQ data.
- *
- * @param[in] presence_config The configuration to set inter phase boost for
- * @param[in] enable true if inter phase boost should be enabled
- */
-void acc_detector_presence_config_inter_phase_boost_set(acc_detector_presence_config_t *presence_config, bool enable);
-
-/**
- * @brief Get if inter-frame phase boost is enabled
- *
- * See @ref acc_detector_presence_config_inter_phase_boost_set
- *
- * @param[in] presence_config The configuration to get inter phase boost for
- * @return true if inter-frame phase boost is enabled, false otherwise
- */
-bool acc_detector_presence_config_inter_phase_boost_get(const acc_detector_presence_config_t *presence_config);
 
 /**
  * @brief Set intra-frame presence detection

@@ -1,4 +1,4 @@
-// Copyright (c) Acconeer AB, 2022-2024
+// Copyright (c) Acconeer AB, 2022-2025
 // All rights reserved
 
 #ifndef ACC_DETECTOR_PRESENCE_PROCESSING_H_
@@ -10,7 +10,6 @@
 #include "acc_config.h"
 #include "acc_definitions_common.h"
 
-
 /**
  * @brief Presence detector handle container
  */
@@ -18,14 +17,12 @@ struct acc_detector_presence_processing_handle;
 
 typedef struct acc_detector_presence_processing_handle acc_detector_presence_processing_handle_t;
 
-
 /**
  * @brief Presence processing configuration container
  */
-struct  acc_detector_presence_processing_config;
+struct acc_detector_presence_processing_config;
 
 typedef struct acc_detector_presence_processing_config acc_detector_presence_processing_config_t;
-
 
 /**
  * @brief Presence detector results container
@@ -36,11 +33,10 @@ typedef struct
 	float    intra_presence_score;
 	float    inter_presence_score;
 	float    presence_distance;
-	float    *depthwise_intra_presence_scores;
-	float    *depthwise_inter_presence_scores;
+	float   *depthwise_intra_presence_scores;
+	float   *depthwise_inter_presence_scores;
 	uint32_t depthwise_presence_scores_length;
 } acc_detector_presence_processing_result_t;
-
 
 /**
  * @brief Get the buffer size needed for presence processing
@@ -50,14 +46,12 @@ typedef struct
  */
 uint32_t acc_detector_presence_processing_get_buffer_size(const acc_config_t *sensor_config);
 
-
 /**
  * @brief Create a configuration for a presence processor
  *
  * @return Presence processor configuration, NULL if creation was not possible
  */
 acc_detector_presence_processing_config_t *acc_detector_presence_processing_config_create(void);
-
 
 /**
  * @brief Destroy a presence processor configuration
@@ -66,7 +60,6 @@ acc_detector_presence_processing_config_t *acc_detector_presence_processing_conf
  */
 void acc_detector_presence_processing_config_destroy(acc_detector_presence_processing_config_t *processor_config);
 
-
 /**
  * @brief Create a processing handle with the provided base configuration
  *
@@ -74,10 +67,8 @@ void acc_detector_presence_processing_config_destroy(acc_detector_presence_proce
  * @param[in] sensor_config The sensor config to create a processing handle with
  * @return processing handle, NULL if creation was not possible
  */
-acc_detector_presence_processing_handle_t *acc_detector_presence_processing_create(
-	const acc_detector_presence_processing_config_t *processing_config,
-	const acc_config_t                              *sensor_config);
-
+acc_detector_presence_processing_handle_t *acc_detector_presence_processing_create(const acc_detector_presence_processing_config_t *processing_config,
+                                                                                   const acc_config_t                              *sensor_config);
 
 /**
  * @brief Destroy a processing handle
@@ -85,7 +76,6 @@ acc_detector_presence_processing_handle_t *acc_detector_presence_processing_crea
  * @param[in] processing_handle A reference to the processing handle to destroy
  */
 void acc_detector_presence_processing_destroy(acc_detector_presence_processing_handle_t *processing_handle);
-
 
 /**
  * @brief Reset existing processing buffers
@@ -95,7 +85,6 @@ void acc_detector_presence_processing_destroy(acc_detector_presence_processing_h
  */
 
 bool acc_detector_presence_processing_reset(acc_detector_presence_processing_handle_t *processing_handle);
-
 
 /**
  * @brief Process sensor data
@@ -113,7 +102,6 @@ bool acc_detector_presence_processing_process(acc_detector_presence_processing_h
                                               const acc_int16_complex_t                 *frame,
                                               acc_detector_presence_processing_result_t *presence_result);
 
-
 /**
  * @brief Set the frame rate
  *
@@ -123,7 +111,6 @@ bool acc_detector_presence_processing_process(acc_detector_presence_processing_h
  * @param[in] frame_rate Frame rate in Hz. Must be > 0
  */
 void acc_detector_presence_processing_config_frame_rate_set(acc_detector_presence_processing_config_t *processing_config, float frame_rate);
-
 
 /**
  * @brief Get the frame rate
@@ -135,7 +122,6 @@ void acc_detector_presence_processing_config_frame_rate_set(acc_detector_presenc
  */
 float acc_detector_presence_processing_config_frame_rate_get(const acc_detector_presence_processing_config_t *processing_config);
 
-
 /**
  * @brief Set the inter-frame presence timeout in seconds
  *
@@ -146,8 +132,7 @@ float acc_detector_presence_processing_config_frame_rate_get(const acc_detector_
  * @param[in] inter_frame_presence_timeout Timeout in seconds between 0 and 30
  */
 void acc_detector_presence_processing_config_inter_frame_presence_timeout_set(acc_detector_presence_processing_config_t *processing_config,
-                                                                              uint16_t                                  inter_frame_presence_timeout);
-
+                                                                              uint16_t inter_frame_presence_timeout);
 
 /**
  * @brief Get the inter-frame presence timeout in seconds
@@ -159,29 +144,6 @@ void acc_detector_presence_processing_config_inter_frame_presence_timeout_set(ac
  */
 uint16_t acc_detector_presence_processing_config_inter_frame_presence_timeout_get(const acc_detector_presence_processing_config_t *processing_config);
 
-
-/**
- * @brief Set inter-frame phase boost
- *
- * Used to increase detection of slow motions by utilizing the phase information in the Sparse IQ data.
- *
- * @param[in] processing_config The configuration to set inter phase boost for
- * @param[in] enable true if inter phase boost should be enabled
- */
-void acc_detector_presence_processing_config_inter_phase_boost_set(acc_detector_presence_processing_config_t *processing_config, bool enable);
-
-
-/**
- * @brief Get if inter-frame phase boost is enabled
- *
- * See @ref acc_detector_presence_processing_config_inter_phase_boost_set
- *
- * @param[in] processing_config The configuration to get inter phase boost for
- * @return true if inter-frame phase boost is enabled, false otherwise
- */
-bool acc_detector_presence_processing_config_inter_phase_boost_get(const acc_detector_presence_processing_config_t *processing_config);
-
-
 /**
  * @brief Set intra-frame presence detection
  *
@@ -191,7 +153,6 @@ bool acc_detector_presence_processing_config_inter_phase_boost_get(const acc_det
  * @param[in] enable true if intra-frame detection should be enabled
  */
 void acc_detector_presence_processing_config_intra_detection_set(acc_detector_presence_processing_config_t *processing_config, bool enable);
-
 
 /**
  * @brief Get if frame intra-frame presence detection is enabled
@@ -203,7 +164,6 @@ void acc_detector_presence_processing_config_intra_detection_set(acc_detector_pr
  */
 bool acc_detector_presence_processing_config_intra_detection_get(const acc_detector_presence_processing_config_t *processing_config);
 
-
 /**
  * @brief Set the detection threshold for the intra-frame presence detection
  *
@@ -213,8 +173,7 @@ bool acc_detector_presence_processing_config_intra_detection_get(const acc_detec
  * @param[in] intra_detection_threshold The intra-frame detection threshold to set
  */
 void acc_detector_presence_processing_config_intra_detection_threshold_set(acc_detector_presence_processing_config_t *processing_config,
-                                                                           float                                     intra_detection_threshold);
-
+                                                                           float                                      intra_detection_threshold);
 
 /**
  * @brief Get the detection threshold for the intra-frame presence detection
@@ -226,7 +185,6 @@ void acc_detector_presence_processing_config_intra_detection_threshold_set(acc_d
  */
 float acc_detector_presence_processing_config_intra_detection_threshold_get(const acc_detector_presence_processing_config_t *processing_config);
 
-
 /**
  * @brief Set inter-frame presence detection
  *
@@ -236,7 +194,6 @@ float acc_detector_presence_processing_config_intra_detection_threshold_get(cons
  * @param[in] enable true if inter-frame presence detection should be enabled
  */
 void acc_detector_presence_processing_config_inter_detection_set(acc_detector_presence_processing_config_t *processing_config, bool enable);
-
 
 /**
  * @brief Get if inter-frame presence detection is enabled
@@ -248,7 +205,6 @@ void acc_detector_presence_processing_config_inter_detection_set(acc_detector_pr
  */
 bool acc_detector_presence_processing_config_inter_detection_get(const acc_detector_presence_processing_config_t *processing_config);
 
-
 /**
  * @brief Set the detection threshold for the inter-frame presence detection
  *
@@ -258,8 +214,7 @@ bool acc_detector_presence_processing_config_inter_detection_get(const acc_detec
  * @param[in] inter_detection_threshold The threshold
  */
 void acc_detector_presence_processing_config_inter_detection_threshold_set(acc_detector_presence_processing_config_t *processing_config,
-                                                                           float                                     inter_detection_threshold);
-
+                                                                           float                                      inter_detection_threshold);
 
 /**
  * @brief Get the detection threshold for the inter-frame presence detection
@@ -271,7 +226,6 @@ void acc_detector_presence_processing_config_inter_detection_threshold_set(acc_d
  */
 float acc_detector_presence_processing_config_inter_detection_threshold_get(const acc_detector_presence_processing_config_t *processing_config);
 
-
 /**
  * @brief Set the time constant of the low pass filter for the inter-frame deviation between fast and slow
  *
@@ -279,8 +233,7 @@ float acc_detector_presence_processing_config_inter_detection_threshold_get(cons
  * @param[in] inter_frame_deviation_time_const Time constant to set
  */
 void acc_detector_presence_processing_config_inter_frame_deviation_time_const_set(acc_detector_presence_processing_config_t *processing_config,
-                                                                                  float                                     inter_frame_deviation_time_const);
-
+                                                                                  float inter_frame_deviation_time_const);
 
 /**
  * @brief Get the time constant of the low pass filter for the inter-frame deviation between fast and slow
@@ -289,8 +242,7 @@ void acc_detector_presence_processing_config_inter_frame_deviation_time_const_se
  * @return time constant in s
  */
 float acc_detector_presence_processing_config_inter_frame_deviation_time_const_get(
-	const acc_detector_presence_processing_config_t *processing_config);
-
+    const acc_detector_presence_processing_config_t *processing_config);
 
 /**
  * @brief Set the cutoff frequency of the low pass filter for the fast filtered absolute sweep mean
@@ -301,8 +253,7 @@ float acc_detector_presence_processing_config_inter_frame_deviation_time_const_g
  * @param[in] inter_frame_fast_cutoff Cutoff frequency to set
  */
 void acc_detector_presence_processing_config_inter_frame_fast_cutoff_set(acc_detector_presence_processing_config_t *processing_config,
-                                                                         float                                     inter_frame_fast_cutoff);
-
+                                                                         float                                      inter_frame_fast_cutoff);
 
 /**
  * @brief Get the cutoff frequency of the low pass filter for the fast filtered absolute sweep mean
@@ -312,7 +263,6 @@ void acc_detector_presence_processing_config_inter_frame_fast_cutoff_set(acc_det
  */
 float acc_detector_presence_processing_config_inter_frame_fast_cutoff_get(const acc_detector_presence_processing_config_t *processing_config);
 
-
 /**
  * @brief Set the cutoff frequency of the low pass filter for the slow filtered absolute sweep mean
  *
@@ -320,8 +270,7 @@ float acc_detector_presence_processing_config_inter_frame_fast_cutoff_get(const 
  * @param[in] inter_frame_slow_cutoff Cutoff frequency to set
  */
 void acc_detector_presence_processing_config_inter_frame_slow_cutoff_set(acc_detector_presence_processing_config_t *processing_config,
-                                                                         float                                     inter_frame_slow_cutoff);
-
+                                                                         float                                      inter_frame_slow_cutoff);
 
 /**
  * @brief Get the cutoff frequency of the low pass filter for the slow filtered absolute sweep mean
@@ -331,7 +280,6 @@ void acc_detector_presence_processing_config_inter_frame_slow_cutoff_set(acc_det
  */
 float acc_detector_presence_processing_config_inter_frame_slow_cutoff_get(const acc_detector_presence_processing_config_t *processing_config);
 
-
 /**
  * @brief Set the time constant for the depthwise filtering in the intra-frame part
  *
@@ -339,8 +287,7 @@ float acc_detector_presence_processing_config_inter_frame_slow_cutoff_get(const 
  * @param[in] intra_frame_time_const Time constant to set
  */
 void acc_detector_presence_processing_config_intra_frame_time_const_set(acc_detector_presence_processing_config_t *processing_config,
-                                                                        float                                     intra_frame_time_const);
-
+                                                                        float                                      intra_frame_time_const);
 
 /**
  * @brief Get the time constant for the depthwise filtering in the intra-frame part
@@ -350,7 +297,6 @@ void acc_detector_presence_processing_config_intra_frame_time_const_set(acc_dete
  */
 float acc_detector_presence_processing_config_intra_frame_time_const_get(const acc_detector_presence_processing_config_t *processing_config);
 
-
 /**
  * @brief Set the time constant for the output in the intra-frame part
  *
@@ -358,8 +304,7 @@ float acc_detector_presence_processing_config_intra_frame_time_const_get(const a
  * @param[in] intra_output_time_const Time constant to set
  */
 void acc_detector_presence_processing_config_intra_output_time_const_set(acc_detector_presence_processing_config_t *processing_config,
-                                                                         float                                     intra_output_time_const);
-
+                                                                         float                                      intra_output_time_const);
 
 /**
  * @brief Get the time constant for the output in the intra-frame part
@@ -369,7 +314,6 @@ void acc_detector_presence_processing_config_intra_output_time_const_set(acc_det
  */
 float acc_detector_presence_processing_config_intra_output_time_const_get(const acc_detector_presence_processing_config_t *processing_config);
 
-
 /**
  * @brief Set the time constant for the output in the inter-frame part
  *
@@ -377,8 +321,7 @@ float acc_detector_presence_processing_config_intra_output_time_const_get(const 
  * @param[in] inter_output_time_const Time constant to set
  */
 void acc_detector_presence_processing_config_inter_output_time_const_set(acc_detector_presence_processing_config_t *processing_config,
-                                                                         float                                     inter_output_time_const);
-
+                                                                         float                                      inter_output_time_const);
 
 /**
  * @brief Get the time constant for the output in the inter-frame part
@@ -387,6 +330,5 @@ void acc_detector_presence_processing_config_inter_output_time_const_set(acc_det
  * @return time constant in s
  */
 float acc_detector_presence_processing_config_inter_output_time_const_get(const acc_detector_presence_processing_config_t *processing_config);
-
 
 #endif
