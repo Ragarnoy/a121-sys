@@ -2,38 +2,60 @@ use crate::error::{BuildError, Result};
 use std::env;
 use std::path::{Path, PathBuf};
 
+/// Headers + optional `lib/` directory (crate `rss/` tree or external SDK).
 pub fn get_rss_path() -> Result<PathBuf> {
+    if let Ok(include) = env::var("A121_RSS_INCLUDE") {
+        let include = PathBuf::from(include);
+        if include.is_dir() {
+            return include
+                .parent()
+                .map(Path::to_path_buf)
+                .ok_or(BuildError::RssPathNotFound);
+        }
+        return Err(BuildError::HeadersNotFound(include));
+    }
+
     PathBuf::from("rss")
         .canonicalize()
         .map_err(|_| BuildError::RssPathNotFound)
 }
 
+/// Directory containing `libacconeer_a121.a` (and optional detector archives).
 pub fn discover_library() -> Result<PathBuf> {
-    // Try environment variable first
-    if let Ok(path) = env::var("ACC_RSS_LIBS") {
-        let path = PathBuf::from(path);
-        if path.exists() {
-            return Ok(path);
+    for key in ["A121_RSS_LIB", "ACC_RSS_LIBS"] {
+        if let Ok(path) = env::var(key) {
+            if path.is_empty() {
+                continue;
+            }
+            let path = PathBuf::from(&path);
+            if path.is_dir() && path != Path::new(".") {
+                println!("cargo:rerun-if-env-changed={key}");
+                return Ok(path);
+            }
+            return Err(BuildError::LibraryNotFound(path));
         }
     }
 
-    // Try common locations
-    let locations = [
+    let rss = get_rss_path()?;
+    let lib = rss.join("lib");
+    if lib.is_dir() {
+        return Ok(lib);
+    }
+
+    for loc in [
         "libs",
         "staticlibs",
         "../libs",
         "/usr/local/lib/acconeer",
         "/usr/lib/acconeer",
-    ];
-
-    for loc in &locations {
+    ] {
         let path = PathBuf::from(loc);
-        if path.exists() {
+        if path.is_dir() {
             return Ok(path);
         }
     }
 
-    Err(BuildError::LibraryNotFound(PathBuf::from(".")))
+    Err(BuildError::LibraryNotFound(lib))
 }
 
 pub fn setup_linking(lib_path: &Path) -> Result<()> {
@@ -56,13 +78,24 @@ pub fn setup_linking(lib_path: &Path) -> Result<()> {
 }
 
 fn setup_stub_linking() -> Result<()> {
-    // Only setup ARM-specific linking for ARM targets
     if cfg!(target_arch = "arm") {
+        let target = env::var("TARGET").unwrap_or_default();
+        let cpu = if target.contains("v8m") || target.contains("m33") {
+            "cortex-m33"
+        } else {
+            "cortex-m4"
+        };
+        let fpu = if target.contains("v8m") || target.contains("m33") {
+            "fpv5-sp-d16"
+        } else {
+            "fpv4-sp-d16"
+        };
+
         println!("cargo:rustc-linker=arm-none-eabi-gcc");
-        println!("cargo:rustc-link-arg=-mcpu=cortex-m4");
+        println!("cargo:rustc-link-arg=-mcpu={cpu}");
         println!("cargo:rustc-link-arg=-mthumb");
         println!("cargo:rustc-link-arg=-mfloat-abi=hard");
-        println!("cargo:rustc-link-arg=-mfpu=fpv4-sp-d16");
+        println!("cargo:rustc-link-arg=-mfpu={fpu}");
     }
     Ok(())
 }

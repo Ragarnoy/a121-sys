@@ -2,6 +2,7 @@
 use std::env;
 use std::path::PathBuf;
 
+mod arm_target;
 mod bindings;
 mod error;
 mod library;
@@ -29,6 +30,8 @@ pub fn main() -> Result<()> {
     println!("cargo:rerun-if-changed=build/");
     println!("cargo:rerun-if-changed=c_src/");
     println!("cargo:rerun-if-env-changed=ACC_RSS_LIBS");
+    println!("cargo:rerun-if-env-changed=A121_RSS_LIB");
+    println!("cargo:rerun-if-env-changed=A121_RSS_INCLUDE");
 
     Ok(())
 }

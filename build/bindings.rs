@@ -1,3 +1,4 @@
+use crate::arm_target::arm_target_config;
 use crate::error::{BuildError, Result};
 use bindgen::Builder;
 use std::env;
@@ -23,7 +24,6 @@ pub fn generate_bindings(rss_path: &Path) -> Result<()> {
 
     // Add target-specific configurations
     if target.contains("thumb") || target.contains("arm") {
-        // Find ARM toolchain include paths
         let include_paths = find_arm_include_paths()?;
 
         eprintln!("Using ARM include paths:");
@@ -31,18 +31,8 @@ pub fn generate_bindings(rss_path: &Path) -> Result<()> {
             eprintln!("  {}", path.display());
         }
 
-        builder = builder
-            .clang_arg("--target=thumbv7em-none-eabihf")
-            .clang_arg("-mthumb")
-            .clang_arg("-mcpu=cortex-m4")
-            .clang_arg("-mfloat-abi=hard")
-            .clang_arg("-mfpu=fpv4-sp-d16")
-            // Define common macros for embedded systems
-            .clang_arg("-D__GNUC__")
-            .clang_arg("-D__STDC__=1")
-            .clang_arg("-D__ARM_ARCH_7EM__=1");
+        builder = arm_target_config(&target).apply_clang_args(builder);
 
-        // Add all include paths
         for path in include_paths {
             builder = builder.clang_arg(format!("-isystem{}", path.display()));
         }
@@ -122,6 +112,7 @@ fn find_arm_include_paths() -> Result<Vec<PathBuf>> {
     // Method 2: Common locations if method 1 fails
     if paths.is_empty() {
         let common_locations = [
+            "/opt/homebrew/arm-none-eabi/include",
             "/usr/arm-none-eabi/include",
             "/usr/lib/arm-none-eabi/include",
             "/usr/local/arm-none-eabi/include",
@@ -233,18 +224,13 @@ fn add_headers_to_bindings(mut bindings: Builder, headers: &Path) -> Result<Buil
     Ok(bindings)
 }
 
-fn add_log_wrapper(mut bindings: Builder) -> Result<Builder> {
-    // Determine target-specific compiler settings
+fn add_log_wrapper(bindings: Builder) -> Result<Builder> {
     let target = env::var("TARGET").unwrap_or_default();
     let mut build = cc::Build::new();
 
     if target.contains("thumb") || target.contains("arm") {
-        build
-            .compiler("arm-none-eabi-gcc")
-            .flag("-mcpu=cortex-m4")
-            .flag("-mthumb")
-            .flag("-mfloat-abi=hard")
-            .flag("-mfpu=fpv4-sp-d16");
+        build.compiler("arm-none-eabi-gcc");
+        arm_target_config(&target).apply_cc_flags(&mut build);
     } else if target.contains("riscv32imac-esp-espidf") || target.contains("riscv32imc-esp-espidf")
     {
         build.compiler("riscv32-esp-elf-gcc");
@@ -259,7 +245,5 @@ fn add_log_wrapper(mut bindings: Builder) -> Result<Builder> {
 
     println!("cargo:rerun-if-changed=c_src/logging.c");
     println!("cargo:rustc-link-lib=static=log");
-    bindings = bindings.header("c_src/logging.h");
-
     Ok(bindings)
 }

@@ -47,12 +47,35 @@ Then make sure that the following gives you the correct sysroot path:
 riscv32-esp-elf-gcc -print-sysroot
 ```
 
+## Vendored SDK layout
+
+You can point at an external Acconeer RSS package (headers + prebuilt `.a` files) instead of
+copying libraries into this crate:
+
+```bash
+export A121_RSS_INCLUDE=/path/to/rss/include
+export A121_RSS_LIB=/path/to/rss/lib
+cargo build --target thumbv8m.main-none-eabihf
+```
+
+`ACC_RSS_LIBS` is also accepted (same as `A121_RSS_LIB`). The crate `rss/include/` tree is always
+used for bindgen; only the **static libraries** need to live in `A121_RSS_LIB` or `rss/lib/`.
+
+Typical layout:
+
+```
+rss/
+  include/   # acc_*.h (shipped in this repo)
+  lib/       # libacconeer_a121.a, optional detector libs (not always committed)
+```
+
 ## Supported Targets
 
 Support is dependent on the Acconeer A121 Static Library's availability:
 
-- arm-none-eabihf (gcc, armcc, armclang)
-- esp riscv
+- `thumbv7em-none-eabihf` — Cortex-M4F (e.g. STM32L4)
+- `thumbv8m.main-none-eabihf` — Cortex-M33 (e.g. STM32WBA65)
+- ESP RISC-V / Xtensa
 
 ## Getting Started
 
