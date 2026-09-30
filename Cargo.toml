@@ -16,7 +16,7 @@ build = "build/mod.rs"
 [dependencies]
 
 [build-dependencies]
-bindgen = { version = "0.72" }
+bindgen = { version = "0.73" }
 cc = "1.2"
 
 [features]
