@@ -18,10 +18,10 @@
 //! ```toml
 //! [dependencies]
 //! # For real hardware
-//! a121-sys = { version = "0.5", features = ["distance", "presence"] }
+//! a121-sys = { version = "0.8", features = ["distance", "presence"] }
 //!
 //! # For testing/development with stub library
-//! a121-sys = { version = "0.5", features = ["stub_library", "distance", "presence"] }
+//! a121-sys = { version = "0.8", features = ["stub_library", "distance", "presence"] }
 //! ```
 //!
 //! ## Features
@@ -94,7 +94,7 @@
 //!
 //! 1. Enable the stub library feature:
 //!    ```toml
-//!    a121-sys = { version = "0.5", features = ["stub_library"] }
+//!    a121-sys = { version = "0.8", features = ["stub_library"] }
 //!    ```
 //!
 //! 2. Install required toolchain:
@@ -110,7 +110,7 @@
 //!
 //! ## Version Compatibility
 //!
-//! - Current bindings version: 1.8.0
+//! - Current bindings version: 1.13.0
 //! - Minimum Supported Rust Version (MSRV): 1.82.0
 //!
 

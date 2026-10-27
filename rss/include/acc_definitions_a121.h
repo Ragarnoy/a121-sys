@@ -81,7 +81,7 @@ typedef enum
  *
  * Pulse Repetition Frequency, PRF, is the frequency at
  * which pulses are sent out from the radar system. The
- * measurement time is approximately proportional to the
+ * measurement time is inversely proportional to the
  * PRF. The higher the PRF, the shorter the measurement time.
  *
  * This parameter sets the Maximum Measurable Distance, MMD,
