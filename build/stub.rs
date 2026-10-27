@@ -34,13 +34,20 @@ fn stub_toolchain() -> StubToolchain {
                 "-DFLOAT_ABI_HARD",
             ],
         }
-    } else if target.contains("riscv32imac-esp-espidf") || target.contains("riscv32imc-esp-espidf")
-    {
+    } else if target.contains("riscv32imac-esp-espidf") {
+        // The ESP toolchain defaults to rv32gc, which may emit FPU instructions
         StubToolchain {
             compiler: "riscv32-esp-elf-gcc",
             archiver: "riscv32-esp-elf-ar",
             nm: "riscv32-esp-elf-nm",
-            compile_args: &[],
+            compile_args: &["-march=rv32imac", "-mabi=ilp32"],
+        }
+    } else if target.contains("riscv32imc-esp-espidf") {
+        StubToolchain {
+            compiler: "riscv32-esp-elf-gcc",
+            archiver: "riscv32-esp-elf-ar",
+            nm: "riscv32-esp-elf-nm",
+            compile_args: &["-march=rv32imc", "-mabi=ilp32"],
         }
     } else {
         StubToolchain {
