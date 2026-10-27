@@ -1,6 +1,4 @@
 use crate::error::{BuildError, Result};
-use bindgen::callbacks::ItemInfo;
-use bindgen::Builder;
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -9,22 +7,7 @@ use std::path::Path;
 struct CFunctionDecl {
     name: String,
     return_type: String,
-    parameters: Vec<(String, String)>, // (type, name)
-}
-
-#[derive(Debug, Default)]
-struct FunctionCollector {
-    _functions: Vec<CFunctionDecl>,
-}
-
-impl bindgen::callbacks::ParseCallbacks for FunctionCollector {
-    fn item_name(&self, _name: ItemInfo) -> Option<String> {
-        None
-    }
-
-    fn header_file(&self, _filename: &str) {
-        // Implement if needed for debugging
-    }
+    parameters: Vec<(String, String)>, // (full declaration, name)
 }
 
 pub struct StubGenerator {
@@ -40,6 +23,7 @@ impl Default for StubGenerator {
         return_values.insert("uint16_t".to_string(), "0".to_string());
         return_values.insert("uint32_t".to_string(), "0".to_string());
         return_values.insert("float".to_string(), "0.1".to_string());
+        return_values.insert("float32_t".to_string(), "0.1".to_string());
         return_values.insert("int32_t".to_string(), "-1".to_string());
         return_values.insert(
             "acc_config_profile_t".to_string(),
@@ -75,6 +59,7 @@ impl Default for StubGenerator {
         header_files.insert(
             "acconeer_a121_stubs.c".to_string(),
             vec![
+                "acc_definitions.h",
                 "acc_hal_definitions_a121.h",
                 "acc_definitions_common.h",
                 "acc_processing.h",
@@ -106,10 +91,13 @@ impl Default for StubGenerator {
         if cfg!(feature = "presence") {
             header_files.insert(
                 "acc_detector_presence_a121_stubs.c".to_string(),
-                vec!["acc_detector_presence.h"]
-                    .into_iter()
-                    .map(String::from)
-                    .collect(),
+                vec![
+                    "acc_detector_presence.h",
+                    "acc_detector_presence_processing.h",
+                ]
+                .into_iter()
+                .map(String::from)
+                .collect(),
             );
         }
 
@@ -121,38 +109,30 @@ impl Default for StubGenerator {
 }
 
 impl StubGenerator {
-    pub fn generate_stubs(&self, include_dir: &Path, out_dir: &Path) -> Result<()> {
+    /// Generates one C stub file per entry in `header_files`.
+    ///
+    /// Returns the names of the functions stubbed in each file, keyed by stub file name.
+    pub fn generate_stubs(
+        &self,
+        include_dir: &Path,
+        out_dir: &Path,
+    ) -> Result<HashMap<String, Vec<String>>> {
+        let mut stubbed = HashMap::new();
+
         for (stub_file, headers) in &self.header_files {
             let mut functions = Vec::new();
 
             // Parse all headers for this stub file
             for header in headers {
                 let header_path = include_dir.join(header);
-                fs::read_to_string(&header_path).map_err(|e| {
+                let text = fs::read_to_string(&header_path).map_err(|e| {
                     BuildError::StubGenerationFailed(format!(
                         "Failed to read header {}: {}",
                         header, e
                     ))
                 })?;
 
-                let collector = FunctionCollector::default();
-
-                let bindings = Builder::default()
-                    .header(header_path.to_str().unwrap())
-                    .parse_callbacks(Box::new(collector))
-                    .clang_arg("-I/usr/lib/arm-none-eabi/include")
-                    .clang_arg(format!("-I{}", include_dir.display()))
-                    .generate()
-                    .map_err(|e| {
-                        BuildError::StubGenerationFailed(format!(
-                            "Failed to generate bindings: {}",
-                            e
-                        ))
-                    })?;
-
-                // Extract function declarations by parsing the generated bindings text
-                let bindings_text = bindings.to_string();
-                functions.extend(self.extract_functions_from_text(&bindings_text)?);
+                functions.extend(self.extract_functions_from_header(&text)?);
             }
 
             // Generate the stub file
@@ -163,60 +143,87 @@ impl StubGenerator {
             fs::write(&stub_path, stub_content).map_err(|e| {
                 BuildError::StubGenerationFailed(format!("Failed to write stub file: {}", e))
             })?;
+
+            stubbed.insert(
+                stub_file.clone(),
+                functions.into_iter().map(|f| f.name).collect(),
+            );
         }
-        Ok(())
+        Ok(stubbed)
     }
 
-    fn extract_functions_from_text(&self, text: &str) -> Result<Vec<CFunctionDecl>> {
-        let mut functions = Vec::new();
+    /// Extracts the function prototypes declared at the top level of a C header.
+    ///
+    /// Comments and preprocessor lines are removed, the remaining text is split into
+    /// top-level statements on `;`, and every statement that is not a type definition
+    /// and contains a parameter list is parsed as a prototype.
+    fn extract_functions_from_header(&self, text: &str) -> Result<Vec<CFunctionDecl>> {
+        let code = strip_comments(text);
+        let code: String = code
+            .lines()
+            .filter(|line| !line.trim_start().starts_with('#'))
+            .collect::<Vec<_>>()
+            .join("\n");
 
-        // Split the text into lines and look for extern "C" function declarations
-        for line in text.lines() {
-            let line = line.trim();
-            if line.starts_with("extern") && line.contains("fn") {
-                if let Some(func) = self.parse_function_declaration(line) {
+        let mut functions = Vec::new();
+        let mut statement = String::new();
+        let mut depth = 0usize;
+
+        for c in code.chars() {
+            match c {
+                '{' => depth += 1,
+                '}' => depth = depth.saturating_sub(1),
+                ';' if depth == 0 => {
+                    let stmt = statement.split_whitespace().collect::<Vec<_>>().join(" ");
+                    statement.clear();
+
+                    let is_type = ["typedef", "struct", "enum", "union"]
+                        .iter()
+                        .any(|kw| stmt.starts_with(kw));
+                    if is_type || !stmt.contains('(') {
+                        continue;
+                    }
+
+                    let func = self.parse_function_declaration(&stmt).ok_or_else(|| {
+                        BuildError::StubGenerationFailed(format!(
+                            "Failed to parse prototype: {}",
+                            stmt
+                        ))
+                    })?;
                     functions.push(func);
+                    continue;
                 }
+                _ => {}
             }
+            statement.push(c);
         }
 
         Ok(functions)
     }
 
-    fn parse_function_declaration(&self, line: &str) -> Option<CFunctionDecl> {
-        // Basic function declaration parsing
-        let line = line.trim_start_matches("extern \"C\" ").trim();
-        if !line.starts_with("fn ") {
+    fn parse_function_declaration(&self, decl: &str) -> Option<CFunctionDecl> {
+        // Split "<return type> <name>(<params>)"
+        let (head, rest) = decl.split_once('(')?;
+        let params_part = rest.trim().strip_suffix(')')?;
+
+        let (return_type, name) = split_trailing_identifier(head)?;
+        if return_type.is_empty() {
             return None;
         }
 
-        let line = line.trim_start_matches("fn ").trim_end_matches(';');
-
-        // Split name and parameters
-        let mut parts = line.splitn(2, '(');
-        let name = parts.next()?.trim().to_string();
-        let params_part = parts.next()?.trim_end_matches(')');
-
-        // Parse parameters
-        let parameters = if params_part.trim() == "void" {
+        // Parse parameters, keeping each declaration verbatim
+        let parameters = if params_part.trim().is_empty() || params_part.trim() == "void" {
             Vec::new()
         } else {
             params_part
                 .split(',')
-                .filter_map(|param| {
-                    let mut parts = param.trim().rsplitn(2, ' ');
-                    let param_name = parts.next()?.to_string();
-                    let param_type = parts.next()?.to_string();
-                    Some((param_type, param_name))
+                .map(|param| {
+                    let param = param.trim();
+                    let without_array = param.split('[').next()?;
+                    let (_, param_name) = split_trailing_identifier(without_array)?;
+                    Some((param.to_string(), param_name))
                 })
-                .collect()
-        };
-
-        // Parse return type
-        let return_type = if line.contains("->") {
-            line.split("->").nth(1)?.trim().to_string()
-        } else {
-            "void".to_string()
+                .collect::<Option<Vec<_>>>()?
         };
 
         Some(CFunctionDecl {
@@ -246,7 +253,7 @@ impl StubGenerator {
 #include <string.h>
 #include <stdint.h>
 
-float fake_external_dependencies(char* foo, complex float iq) {
+static float fake_external_dependencies(char* foo, complex float iq) {
     char buff[42];
     memcpy(buff, foo, 1);
     memset(foo, 0, 1);
@@ -273,11 +280,11 @@ float fake_external_dependencies(char* foo, complex float iq) {
         if func.parameters.is_empty() {
             stub.push_str("void");
         } else {
-            for (i, (param_type, param_name)) in func.parameters.iter().enumerate() {
+            for (i, (param_decl, _)) in func.parameters.iter().enumerate() {
                 if i > 0 {
                     stub.push_str(", ");
                 }
-                stub.push_str(&format!("{} {}", param_type, param_name));
+                stub.push_str(param_decl);
             }
         }
         stub.push_str(") {\n");
@@ -289,7 +296,8 @@ float fake_external_dependencies(char* foo, complex float iq) {
 
         // Add fake dependencies call for create functions
         if func.name.contains("create") {
-            stub.push_str("    fake_external_dependencies(\"dummy\", 1.0 + 2.0*I);\n");
+            stub.push_str("    char dummy[] = \"dummy\";\n");
+            stub.push_str("    fake_external_dependencies(dummy, 1.0 + 2.0*I);\n");
         }
 
         // Add return value
@@ -300,7 +308,7 @@ float fake_external_dependencies(char* foo, complex float iq) {
                 stub.push_str("    return NULL;\n");
             } else {
                 stub.push_str(&format!(
-                    "    {} result = {{}};\n    return result;\n",
+                    "    {} result = {{0}};\n    return result;\n",
                     func.return_type
                 ));
             }
@@ -309,4 +317,56 @@ float fake_external_dependencies(char* foo, complex float iq) {
         stub.push('}');
         stub
     }
+}
+
+/// Removes `/* ... */` and `// ...` comments, keeping line breaks.
+fn strip_comments(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut chars = text.chars().peekable();
+
+    while let Some(c) = chars.next() {
+        match (c, chars.peek()) {
+            ('/', Some('*')) => {
+                chars.next();
+                let mut prev = '\0';
+                for c in chars.by_ref() {
+                    if prev == '*' && c == '/' {
+                        break;
+                    }
+                    if c == '\n' {
+                        out.push('\n');
+                    }
+                    prev = c;
+                }
+                out.push(' ');
+            }
+            ('/', Some('/')) => {
+                for c in chars.by_ref() {
+                    if c == '\n' {
+                        out.push('\n');
+                        break;
+                    }
+                }
+            }
+            _ => out.push(c),
+        }
+    }
+
+    out
+}
+
+/// Splits a declaration such as `const acc_config_t *config` into its type
+/// (`const acc_config_t *`) and trailing identifier (`config`).
+fn split_trailing_identifier(decl: &str) -> Option<(String, String)> {
+    let decl = decl.trim_end();
+    let start = decl
+        .char_indices()
+        .rev()
+        .take_while(|(_, c)| c.is_ascii_alphanumeric() || *c == '_')
+        .last()
+        .map(|(i, _)| i)?;
+
+    let name = decl[start..].to_string();
+    let ty = decl[..start].trim().to_string();
+    Some((ty, name))
 }

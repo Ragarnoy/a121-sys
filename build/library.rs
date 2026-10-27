@@ -48,21 +48,5 @@ pub fn setup_linking(lib_path: &Path) -> Result<()> {
         println!("cargo:rustc-link-lib=static=acc_detector_presence_a121");
     }
 
-    if cfg!(feature = "stub_library") {
-        setup_stub_linking()?;
-    }
-
-    Ok(())
-}
-
-fn setup_stub_linking() -> Result<()> {
-    // Only setup ARM-specific linking for ARM targets
-    if cfg!(target_arch = "arm") {
-        println!("cargo:rustc-linker=arm-none-eabi-gcc");
-        println!("cargo:rustc-link-arg=-mcpu=cortex-m4");
-        println!("cargo:rustc-link-arg=-mthumb");
-        println!("cargo:rustc-link-arg=-mfloat-abi=hard");
-        println!("cargo:rustc-link-arg=-mfpu=fpv4-sp-d16");
-    }
     Ok(())
 }
