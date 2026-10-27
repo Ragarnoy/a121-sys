@@ -17,7 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stub library generation produced no function stubs since the bindgen 0.71 upgrade;
   stubs are now extracted directly from the C headers and validated against the built archives
 - Stub libraries now include the `acc_detector_presence_processing` functions
-- Stub libraries are now compiled with the ARM toolchain when targeting ARM
+- Stub libraries are now compiled with the ARM toolchain when targeting ARM,
+  and with the ESP RISC-V toolchain when targeting `riscv32imac-esp-espidf` or `riscv32imc-esp-espidf`
 
 ### Removed
 - Build-script linker directives for stub builds, which never reached dependent crates;

@@ -102,6 +102,18 @@ jobs:
       - name: cargo hack
         run: cargo hack --feature-powerset check
 
+  macos:
+    runs-on: macos-latest
+    name: macos / stub_library
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+      - name: Install stable
+        uses: dtolnay/rust-toolchain@stable
+      - name: cargo build
+        run: cargo build --features stub_library,distance,presence
+
   msrv:
     runs-on: ubuntu-latest
     strategy:
