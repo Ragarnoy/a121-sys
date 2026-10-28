@@ -139,20 +139,20 @@ pub struct Toolchain {
     pub compiler: Option<&'static str>,
     /// `None` leaves the choice to `cc`
     pub archiver: Option<String>,
-    pub nm: String,
+    /// `None` when no working `nm` was found
+    pub nm: Option<String>,
 }
 
 /// Picks the target's tools once. A compiler from [`TargetConfig::compilers`] is used unless the
-/// user chose one with `CC_<target>`, `TARGET_CC` or `CROSS_COMPILE`, which `cc` then uses. Plain
-/// `CC` and `AR` are not taken as a choice for the target, since they often name the host's tools.
+/// user chose one with `CC_<target>` or `TARGET_CC`, which `cc` then uses. Plain `CC` and `AR` are
+/// not taken as a choice for the target, since they often name the host's tools.
 pub fn toolchain() -> &'static Toolchain {
     static TOOLCHAIN: OnceLock<Toolchain> = OnceLock::new();
     TOOLCHAIN.get_or_init(|| {
         let target = target();
         let config = target_config(&target);
-        let mut cc_vars = target_vars("CC", &target).to_vec();
-        cc_vars.push("CROSS_COMPILE".to_string());
-        let compiler = if user_set(&cc_vars) {
+        let user_cc = user_set(&target_vars("CC", &target));
+        let compiler = if user_cc {
             None
         } else {
             config
@@ -161,7 +161,7 @@ pub fn toolchain() -> &'static Toolchain {
                 .copied()
                 .find(|compiler| runs(compiler))
         };
-        if compiler.is_none() && config.needs_esp_clang && !user_set(&cc_vars) {
+        if compiler.is_none() && config.needs_esp_clang && !user_cc {
             println!(
                 "cargo:warning=None of {:?} was found. The C code is built with cc's default \
                  compiler, which may not target this chip; install the toolchain with espup.",
@@ -180,10 +180,17 @@ pub fn toolchain() -> &'static Toolchain {
             if let Some(compiler) = compiler {
                 build.compiler(compiler);
             }
-            build.get_compiler()
+            build.try_get_compiler().ok()
         };
-        let nm =
-            binutil(&cc_compiler.path().to_string_lossy(), "nm").unwrap_or_else(|| "nm".into());
+        let nm = cc_compiler.and_then(|tool| {
+            let path = tool.path().to_string_lossy();
+            // A clang compiler targets many architectures, which only `llvm-nm` can read
+            let llvm = tool
+                .is_like_clang()
+                .then(|| binutil(&path, "llvm-nm"))
+                .flatten();
+            llvm.or_else(|| binutil(&path, "nm"))
+        });
         Toolchain {
             compiler,
             archiver,
@@ -249,7 +256,7 @@ fn user_set(vars: &[String]) -> bool {
     let mut set = false;
     for var in vars {
         println!("cargo:rerun-if-env-changed={var}");
-        set |= env::var_os(var).is_some();
+        set |= env::var_os(var).is_some_and(|value| !value.is_empty());
     }
     set
 }

@@ -42,8 +42,7 @@ pub fn generate_stubs(rss_path: &Path, out_dir: &Path) -> Result<()> {
     generate_stub_libraries(out_dir, &include_dir)?;
 
     // Validate the generated libraries if the tools are available
-    let nm = &target::toolchain().nm;
-    if Command::new(nm).arg("--version").output().is_ok() {
+    if let Some(nm) = &target::toolchain().nm {
         validate_stub_libraries(nm, out_dir, &stubbed)?;
     }
 

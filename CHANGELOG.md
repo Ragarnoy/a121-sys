@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - The C code (the logging bridge and the stub libraries) is built with the `cc` crate for every
   target, so `CC_<target>`, `CFLAGS_<target>` and `AR_<target>` apply. Without `CC_<target>`,
-  `TARGET_CC` or `CROSS_COMPILE`, the build uses `arm-none-eabi-gcc`, `riscv32-esp-elf-gcc`,
+  or `TARGET_CC`, the build uses `arm-none-eabi-gcc`, `riscv32-esp-elf-gcc`,
   `riscv32-unknown-elf-gcc` or `xtensa-esp32*-elf-gcc` as the bare-metal target needs; plain `CC`
   and `AR` are not used for the target, since they usually name the host's tools.
 - The build reruns when the headers or the `BINDGEN_EXTRA_CLANG_ARGS*`, `CC_<target>`,

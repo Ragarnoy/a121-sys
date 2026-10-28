@@ -38,8 +38,8 @@ impl fmt::Display for BuildError {
             }
             BuildError::InvalidRssInclude(path) => write!(
                 f,
-                "A121_RSS_INCLUDE must be an existing directory named `include`, given as an \
-                 absolute path (relative paths resolve against the a121-sys directory): {}",
+                "A121_RSS_INCLUDE must be an existing directory named `include`. Use an \
+                 absolute path, since a relative one resolves against the a121-sys directory: {}",
                 path.display()
             ),
         }
