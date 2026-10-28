@@ -5,33 +5,21 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::process::Command;
 
-/// Returns the `nm` matching the compiler `cc` picks for the target, such as
-/// `arm-none-eabi-nm` next to `arm-none-eabi-gcc`, or the host `nm`.
-fn nm_tool() -> String {
-    let compiler = target::cc_build().get_compiler();
-    let name = compiler
-        .path()
-        .file_name()
-        .map(|name| name.to_string_lossy().into_owned())
-        .unwrap_or_default();
-    target::binutil(&name, "nm").unwrap_or_else(|| "nm".into())
-}
-
-/// Stub source file and the static library built from it.
+/// Stub source file and the name of the static library built from it (`lib<name>.a`).
 fn stub_libraries() -> Vec<(&'static str, &'static str)> {
-    let mut libs = vec![("acconeer_a121_stubs.c", "libacconeer_a121.a")];
+    let mut libs = vec![("acconeer_a121_stubs.c", "acconeer_a121")];
 
     if cfg!(feature = "distance") {
         libs.push((
             "acc_detector_distance_a121_stubs.c",
-            "libacc_detector_distance_a121.a",
+            "acc_detector_distance_a121",
         ));
     }
 
     if cfg!(feature = "presence") {
         libs.push((
             "acc_detector_presence_a121_stubs.c",
-            "libacc_detector_presence_a121.a",
+            "acc_detector_presence_a121",
         ));
     }
 
@@ -54,9 +42,9 @@ pub fn generate_stubs(rss_path: &Path, out_dir: &Path) -> Result<()> {
     generate_stub_libraries(out_dir, &include_dir)?;
 
     // Validate the generated libraries if the tools are available
-    let nm = nm_tool();
-    if Command::new(&nm).arg("--version").output().is_ok() {
-        validate_stub_libraries(&nm, out_dir, &stubbed)?;
+    let nm = &target::toolchain().nm;
+    if Command::new(nm).arg("--version").output().is_ok() {
+        validate_stub_libraries(nm, out_dir, &stubbed)?;
     }
 
     Ok(())
@@ -64,18 +52,8 @@ pub fn generate_stubs(rss_path: &Path, out_dir: &Path) -> Result<()> {
 
 pub fn generate_stub_libraries(out_dir: &Path, include_dir: &Path) -> Result<()> {
     for (source_file, lib_name) in stub_libraries() {
-        let name = lib_name
-            .strip_prefix("lib")
-            .and_then(|name| name.strip_suffix(".a"))
-            .expect("stub libraries are named lib<name>.a");
         // setup_linking links the libraries, so cc only builds them
-        let mut build = target::cc_build();
-        if target::target() == "thumbv7em-none-eabihf" {
-            build
-                .define("TARGET_ARCH_cm4", None)
-                .define("FLOAT_ABI_HARD", None);
-        }
-        build
+        target::cc_build()
             .file(out_dir.join(source_file))
             .include(include_dir)
             .out_dir(out_dir)
@@ -85,7 +63,7 @@ pub fn generate_stub_libraries(out_dir: &Path, include_dir: &Path) -> Result<()>
             .std("c99")
             .opt_level(2)
             .flag("-fno-math-errno")
-            .try_compile(name)
+            .try_compile(lib_name)
             .map_err(|e| BuildError::CompilationError(format!("{source_file}: {e}")))?;
     }
 
@@ -114,7 +92,7 @@ fn validate_stub_library(
     lib_name: &str,
     expected: &[String],
 ) -> Result<()> {
-    let lib_path = out_dir.join(lib_name);
+    let lib_path = out_dir.join(format!("lib{lib_name}.a"));
 
     let output = Command::new(nm)
         .args(["-g", "--defined-only"])

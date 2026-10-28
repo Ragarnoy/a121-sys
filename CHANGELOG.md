@@ -19,13 +19,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - The C code (the logging bridge and the stub libraries) is built with the `cc` crate for every
-  target, so `CC_<target>`, `CFLAGS_<target>` and `AR_<target>` apply. Without `CC_<target>`, the
-  build looks for `arm-none-eabi-gcc`, `riscv32-esp-elf-gcc`, `riscv32-unknown-elf-gcc` or
-  `xtensa-esp32*-elf-gcc` as the target needs.
+  target, so `CC_<target>`, `CFLAGS_<target>` and `AR_<target>` apply. Without `CC_<target>`,
+  `TARGET_CC` or `CROSS_COMPILE`, the build uses `arm-none-eabi-gcc`, `riscv32-esp-elf-gcc`,
+  `riscv32-unknown-elf-gcc` or `xtensa-esp32*-elf-gcc` as the bare-metal target needs; plain `CC`
+  and `AR` are not used for the target, since they usually name the host's tools.
 - The build reruns when the headers or the `BINDGEN_EXTRA_CLANG_ARGS*`, `CC_<target>`,
   `A121_RSS_LIB`, `A121_RSS_INCLUDE` or `ACC_RSS_LIBS` variables change.
 - An `ACC_RSS_LIBS` or `A121_RSS_LIB` pointing at a missing directory is an error instead of being
   skipped for the default locations.
+  `A121_RSS_INCLUDE` must name an existing directory called `include`.
+- The build warns when an Xtensa target's `xtensa-esp32*-elf-gcc` is not found.
+- Build errors print their message instead of their `Debug` form.
 - `max_align_t` is no longer generated. clang aligns it to 16 bytes on riscv32, which no Rust type
   matches, so its layout test failed.
 - CI installs Ubuntu's `gcc-arm-none-eabi` instead of the 2020 Arm toolchain, and checks

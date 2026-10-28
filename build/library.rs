@@ -12,10 +12,10 @@ pub fn get_rss_path() -> Result<PathBuf> {
         // Relative paths resolve against this crate's directory, which is rarely meant
         let include = PathBuf::from(include);
         let Ok(include) = include.canonicalize() else {
-            return Err(BuildError::HeadersNotFound(include));
+            return Err(BuildError::InvalidRssInclude(include));
         };
         if !include.is_dir() {
-            return Err(BuildError::HeadersNotFound(include));
+            return Err(BuildError::InvalidRssInclude(include));
         }
         // The rest of the build expects the headers in `<rss>/include`
         if include.file_name().is_some_and(|name| name == "include") {
@@ -24,7 +24,7 @@ pub fn get_rss_path() -> Result<PathBuf> {
                 .map(Path::to_path_buf)
                 .ok_or(BuildError::RssPathNotFound);
         }
-        return Err(BuildError::HeadersNotFound(include));
+        return Err(BuildError::InvalidRssInclude(include));
     }
 
     PathBuf::from("rss")

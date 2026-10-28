@@ -13,6 +13,7 @@ pub enum BuildError {
     PythonError(String),
     CompilationError(String),
     HeadersNotFound(PathBuf),
+    InvalidRssInclude(PathBuf),
 }
 
 impl fmt::Display for BuildError {
@@ -35,6 +36,12 @@ impl fmt::Display for BuildError {
             BuildError::HeadersNotFound(path) => {
                 write!(f, "Headers not found at: {}", path.display())
             }
+            BuildError::InvalidRssInclude(path) => write!(
+                f,
+                "A121_RSS_INCLUDE must be an existing directory named `include`, given as an \
+                 absolute path (relative paths resolve against the a121-sys directory): {}",
+                path.display()
+            ),
         }
     }
 }
