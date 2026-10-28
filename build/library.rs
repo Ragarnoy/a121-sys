@@ -9,7 +9,11 @@ use std::path::{Path, PathBuf};
 pub fn get_rss_path() -> Result<PathBuf> {
     println!("cargo:rerun-if-env-changed=A121_RSS_INCLUDE");
     if let Some(include) = env::var_os("A121_RSS_INCLUDE").filter(|path| !path.is_empty()) {
+        // Relative paths resolve against this crate's directory, which is rarely meant
         let include = PathBuf::from(include);
+        let Ok(include) = include.canonicalize() else {
+            return Err(BuildError::HeadersNotFound(include));
+        };
         if !include.is_dir() {
             return Err(BuildError::HeadersNotFound(include));
         }
@@ -33,12 +37,12 @@ pub fn discover_library() -> Result<PathBuf> {
     for key in ["A121_RSS_LIB", "ACC_RSS_LIBS"] {
         println!("cargo:rerun-if-env-changed={key}");
         if let Some(path) = env::var_os(key).filter(|path| !path.is_empty()) {
+            // A set but wrong path is an error rather than a silent fallback. Relative paths
+            // resolve against this crate's directory, so the error asks for an absolute one.
             let path = PathBuf::from(path);
-            // A set but wrong path is an error rather than a silent fallback
-            return if path.is_dir() {
-                Ok(path)
-            } else {
-                Err(BuildError::LibraryNotFound(path))
+            return match path.canonicalize() {
+                Ok(path) if path.is_dir() => Ok(path),
+                _ => Err(BuildError::LibraryNotFound(path)),
             };
         }
     }

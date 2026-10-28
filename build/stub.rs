@@ -2,24 +2,19 @@ use crate::error::{BuildError, Result};
 use crate::stub_generator::StubGenerator;
 use crate::target;
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Command;
 
 /// Returns the `nm` matching the compiler `cc` picks for the target, such as
-/// `arm-none-eabi-nm` next to `arm-none-eabi-gcc`.
-fn nm_tool() -> PathBuf {
+/// `arm-none-eabi-nm` next to `arm-none-eabi-gcc`, or the host `nm`.
+fn nm_tool() -> String {
     let compiler = target::cc_build().get_compiler();
-    let path = compiler.path();
-    let name = path
+    let name = compiler
+        .path()
         .file_name()
         .map(|name| name.to_string_lossy().into_owned())
         .unwrap_or_default();
-    let nm = ["gcc", "clang", "cc"]
-        .iter()
-        .find_map(|suffix| name.strip_suffix(suffix))
-        .map(|prefix| format!("{prefix}nm"))
-        .unwrap_or_else(|| "nm".into());
-    path.with_file_name(nm)
+    target::binutil(&name, "nm").unwrap_or_else(|| "nm".into())
 }
 
 /// Stub source file and the static library built from it.
@@ -59,8 +54,9 @@ pub fn generate_stubs(rss_path: &Path, out_dir: &Path) -> Result<()> {
     generate_stub_libraries(out_dir, &include_dir)?;
 
     // Validate the generated libraries if the tools are available
-    if Command::new(nm_tool()).arg("--version").output().is_ok() {
-        validate_stub_libraries(out_dir, &stubbed)?;
+    let nm = nm_tool();
+    if Command::new(&nm).arg("--version").output().is_ok() {
+        validate_stub_libraries(&nm, out_dir, &stubbed)?;
     }
 
     Ok(())
@@ -74,7 +70,7 @@ pub fn generate_stub_libraries(out_dir: &Path, include_dir: &Path) -> Result<()>
             .expect("stub libraries are named lib<name>.a");
         // setup_linking links the libraries, so cc only builds them
         let mut build = target::cc_build();
-        if target::target().starts_with("thumb") {
+        if target::target() == "thumbv7em-none-eabihf" {
             build
                 .define("TARGET_ARCH_cm4", None)
                 .define("FLOAT_ABI_HARD", None);
@@ -89,8 +85,6 @@ pub fn generate_stub_libraries(out_dir: &Path, include_dir: &Path) -> Result<()>
             .std("c99")
             .opt_level(2)
             .flag("-fno-math-errno")
-            .flag_if_supported("-ffunction-sections")
-            .flag_if_supported("-fdata-sections")
             .try_compile(name)
             .map_err(|e| BuildError::CompilationError(format!("{source_file}: {e}")))?;
     }
@@ -98,22 +92,31 @@ pub fn generate_stub_libraries(out_dir: &Path, include_dir: &Path) -> Result<()>
     Ok(())
 }
 
-fn validate_stub_libraries(out_dir: &Path, stubbed: &HashMap<String, Vec<String>>) -> Result<()> {
+fn validate_stub_libraries(
+    nm: &str,
+    out_dir: &Path,
+    stubbed: &HashMap<String, Vec<String>>,
+) -> Result<()> {
     for (source_file, lib_name) in stub_libraries() {
         let expected = stubbed
             .get(source_file)
             .map(Vec::as_slice)
             .unwrap_or_default();
-        validate_stub_library(out_dir, lib_name, expected)?;
+        validate_stub_library(nm, out_dir, lib_name, expected)?;
     }
 
     Ok(())
 }
 
-fn validate_stub_library(out_dir: &Path, lib_name: &str, expected: &[String]) -> Result<()> {
+fn validate_stub_library(
+    nm: &str,
+    out_dir: &Path,
+    lib_name: &str,
+    expected: &[String],
+) -> Result<()> {
     let lib_path = out_dir.join(lib_name);
 
-    let output = Command::new(nm_tool())
+    let output = Command::new(nm)
         .args(["-g", "--defined-only"])
         .arg(&lib_path)
         .output()

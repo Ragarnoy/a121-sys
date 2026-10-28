@@ -46,7 +46,7 @@ so no `BINDGEN_EXTRA_CLANG_ARGS` are needed.
 
 ## SDK location
 
-Point `A121_RSS_LIB` (or `ACC_RSS_LIBS`) at the directory holding `libacconeer_a121.a` and the
+Point `A121_RSS_LIB` (or `ACC_RSS_LIBS`) at the absolute path of the directory holding `libacconeer_a121.a` and the
 detector libraries:
 
 ```bash

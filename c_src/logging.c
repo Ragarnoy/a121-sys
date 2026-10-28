@@ -1,4 +1,4 @@
-#include "../rss/include/acc_definitions_common.h"
+#include "acc_definitions_common.h"
 #include <stdarg.h>
 #include <stdio.h>
 

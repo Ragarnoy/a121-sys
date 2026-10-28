@@ -3,7 +3,6 @@ use std::{io, path::PathBuf};
 
 pub type Result<T> = std::result::Result<T, BuildError>;
 
-#[derive(Debug)]
 pub enum BuildError {
     EnvVar(std::env::VarError),
     Io(io::Error),
@@ -22,7 +21,11 @@ impl fmt::Display for BuildError {
             BuildError::EnvVar(e) => write!(f, "Environment variable error: {}", e),
             BuildError::Io(e) => write!(f, "IO error: {}", e),
             BuildError::LibraryNotFound(path) => {
-                write!(f, "Library not found at: {}", path.display())
+                write!(f, "Library not found at: {}", path.display())?;
+                if path.is_relative() && path.as_os_str() != "." {
+                    write!(f, " (relative paths resolve against the a121-sys directory, use an absolute path)")?;
+                }
+                Ok(())
             }
             BuildError::RssPathNotFound => write!(f, "RSS directory not found"),
             BuildError::StubGenerationFailed(msg) => write!(f, "Stub generation failed: {}", msg),
@@ -33,6 +36,13 @@ impl fmt::Display for BuildError {
                 write!(f, "Headers not found at: {}", path.display())
             }
         }
+    }
+}
+
+// The build script's `main` prints errors with `Debug`, so show the message
+impl fmt::Debug for BuildError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self, f)
     }
 }
 
