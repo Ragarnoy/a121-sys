@@ -33,11 +33,12 @@
 //!
 //! ## Library Requirements
 //!
-//! This crate requires the Acconeer A121 static libraries and the `arm-none-eabi-gcc` toolchain. You can either:
+//! This crate requires the Acconeer A121 static libraries and a C cross compiler for the target
+//! (`arm-none-eabi-gcc` for Cortex-M). You can either:
 //!
 //! 1. Use the real libraries:
 //!    - Obtain the official Acconeer A121 SDK
-//!    - Set `ACC_RSS_LIBS` environment variable to the library location
+//!    - Set the `A121_RSS_LIB` (or `ACC_RSS_LIBS`) environment variable to the library location
 //!
 //! 2. Use stub libraries (for testing/development):
 //!    - Enable the `stub_library` feature
@@ -61,7 +62,8 @@
 //! The crate is designed for embedded systems and supports:
 //!
 //! - `no_std` environments
-//! - Cortex-M4 targets (specifically `thumbv7em-none-eabihf`, or risc)
+//! - Cortex-M4F (`thumbv7em-none-eabihf`) and Cortex-M33 (`thumbv8m.main-none-eabihf`) targets
+//! - ESP RISC-V and Xtensa targets, with ESP-IDF or bare metal
 //! - Both real hardware and stub implementations
 //!
 //! Example target configuration:

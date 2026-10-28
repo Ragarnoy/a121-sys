@@ -2,22 +2,52 @@ use crate::error::{BuildError, Result};
 use std::env;
 use std::path::{Path, PathBuf};
 
+/// Returns the `rss` directory: the parent of `A121_RSS_INCLUDE` if set, else the crate's `rss`.
+///
+/// The headers must be from the SDK version the crate binds, or the bindings will not match the
+/// libraries.
 pub fn get_rss_path() -> Result<PathBuf> {
+    println!("cargo:rerun-if-env-changed=A121_RSS_INCLUDE");
+    if let Some(include) = env::var_os("A121_RSS_INCLUDE").filter(|path| !path.is_empty()) {
+        let include = PathBuf::from(include);
+        if !include.is_dir() {
+            return Err(BuildError::HeadersNotFound(include));
+        }
+        // The rest of the build expects the headers in `<rss>/include`
+        if include.file_name().is_some_and(|name| name == "include") {
+            return include
+                .parent()
+                .map(Path::to_path_buf)
+                .ok_or(BuildError::RssPathNotFound);
+        }
+        return Err(BuildError::HeadersNotFound(include));
+    }
+
     PathBuf::from("rss")
         .canonicalize()
         .map_err(|_| BuildError::RssPathNotFound)
 }
 
+/// Returns the directory holding `libacconeer_a121.a` and the detector libraries.
 pub fn discover_library() -> Result<PathBuf> {
-    // Try environment variable first
-    if let Ok(path) = env::var("ACC_RSS_LIBS") {
-        let path = PathBuf::from(path);
-        if path.exists() {
-            return Ok(path);
+    for key in ["A121_RSS_LIB", "ACC_RSS_LIBS"] {
+        println!("cargo:rerun-if-env-changed={key}");
+        if let Some(path) = env::var_os(key).filter(|path| !path.is_empty()) {
+            let path = PathBuf::from(path);
+            // A set but wrong path is an error rather than a silent fallback
+            return if path.is_dir() {
+                Ok(path)
+            } else {
+                Err(BuildError::LibraryNotFound(path))
+            };
         }
     }
 
-    // Try common locations
+    let rss_lib = get_rss_path()?.join("lib");
+    if rss_lib.is_dir() {
+        return Ok(rss_lib);
+    }
+
     let locations = [
         "libs",
         "staticlibs",
@@ -25,15 +55,11 @@ pub fn discover_library() -> Result<PathBuf> {
         "/usr/local/lib/acconeer",
         "/usr/lib/acconeer",
     ];
-
-    for loc in &locations {
-        let path = PathBuf::from(loc);
-        if path.exists() {
-            return Ok(path);
-        }
-    }
-
-    Err(BuildError::LibraryNotFound(PathBuf::from(".")))
+    locations
+        .iter()
+        .map(PathBuf::from)
+        .find(|path| path.exists())
+        .ok_or_else(|| BuildError::LibraryNotFound(PathBuf::from(".")))
 }
 
 pub fn setup_linking(lib_path: &Path) -> Result<()> {

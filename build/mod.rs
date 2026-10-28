@@ -7,6 +7,7 @@ mod error;
 mod library;
 mod stub;
 mod stub_generator;
+mod target;
 
 use error::BuildError;
 pub use error::Result;
@@ -28,7 +29,6 @@ pub fn main() -> Result<()> {
     // Always rerun if these change
     println!("cargo:rerun-if-changed=build/");
     println!("cargo:rerun-if-changed=c_src/");
-    println!("cargo:rerun-if-env-changed=ACC_RSS_LIBS");
 
     Ok(())
 }

@@ -14,7 +14,6 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
-  CPATH: "/home/runner/gcc-arm-none-eabi-9.2020.2-linux/gcc-arm-none-eabi-9-2020-q2-update/include"
   ACC_RSS_LIBS: "/home/runner/work/a121-sys/a121-sys/staticlibs"
 
 jobs:
@@ -48,10 +47,14 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           components: clippy
-      - name: Install ARM toolchain
-        uses: carlosperate/arm-none-eabi-gcc-action@v1
-        with:
-          release: '9-2020-q2'
+      - name: Install the Arm toolchain
+        timeout-minutes: 10
+        run: |
+          # Skip rebuilding the man page index, which makes installs slow on the runners.
+          # A short timeout retries stalled mirror downloads instead of waiting on them.
+          sudo rm -f /var/lib/man-db/auto-update
+          sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=20 update
+          sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=20 install -y --no-install-recommends gcc-arm-none-eabi libnewlib-arm-none-eabi
       - name: Create lib directory
         run: mkdir -p "$ACC_RSS_LIBS"
       - name: cargo clippy
@@ -69,10 +72,14 @@ jobs:
           submodules: true
       - name: Install nightly
         uses: dtolnay/rust-toolchain@nightly
-      - name: Install ARM toolchain
-        uses: carlosperate/arm-none-eabi-gcc-action@v1
-        with:
-          release: '9-2020-q2'
+      - name: Install the Arm toolchain
+        timeout-minutes: 10
+        run: |
+          # Skip rebuilding the man page index, which makes installs slow on the runners.
+          # A short timeout retries stalled mirror downloads instead of waiting on them.
+          sudo rm -f /var/lib/man-db/auto-update
+          sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=20 update
+          sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=20 install -y --no-install-recommends gcc-arm-none-eabi libnewlib-arm-none-eabi
       - name: Create lib directory
         run: mkdir -p "$ACC_RSS_LIBS"
       - name: Install cargo-docs-rs
@@ -91,10 +98,14 @@ jobs:
           submodules: true
       - name: Install stable
         uses: dtolnay/rust-toolchain@stable
-      - name: Install ARM toolchain
-        uses: carlosperate/arm-none-eabi-gcc-action@v1
-        with:
-          release: '9-2020-q2'
+      - name: Install the Arm toolchain
+        timeout-minutes: 10
+        run: |
+          # Skip rebuilding the man page index, which makes installs slow on the runners.
+          # A short timeout retries stalled mirror downloads instead of waiting on them.
+          sudo rm -f /var/lib/man-db/auto-update
+          sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=20 update
+          sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=20 install -y --no-install-recommends gcc-arm-none-eabi libnewlib-arm-none-eabi
       - name: Create lib directory
         run: mkdir -p "$ACC_RSS_LIBS"
       - name: cargo install cargo-hack
@@ -128,10 +139,14 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.msrv }}
-      - name: Install ARM toolchain
-        uses: carlosperate/arm-none-eabi-gcc-action@v1
-        with:
-          release: '9-2020-q2'
+      - name: Install the Arm toolchain
+        timeout-minutes: 10
+        run: |
+          # Skip rebuilding the man page index, which makes installs slow on the runners.
+          # A short timeout retries stalled mirror downloads instead of waiting on them.
+          sudo rm -f /var/lib/man-db/auto-update
+          sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=20 update
+          sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=20 install -y --no-install-recommends gcc-arm-none-eabi libnewlib-arm-none-eabi
       - name: Create lib directory
         run: mkdir -p "$ACC_RSS_LIBS"
       - name: cargo check

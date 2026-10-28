@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Cortex-M33 (`thumbv8m.main-none-eabihf`) support, from PR #18 by leftger.
+- Bare-metal ESP targets: `riscv32imac-unknown-none-elf` and `riscv32imc-unknown-none-elf` (ESP32-C6,
+  -H2, -C3, -C2 with esp-hal) and `xtensa-esp32s3-none-elf`, `xtensa-esp32s2-none-elf` and
+  `xtensa-esp32-none-elf`. bindgen takes the C library headers from the target's cross compiler,
+  so `BINDGEN_EXTRA_CLANG_ARGS_<target>` is no longer needed. Xtensa needs Espressif's libclang
+  (`source ~/export-esp.sh`) and the build says so when it is missing.
+- `A121_RSS_LIB` and `A121_RSS_INCLUDE` to point at an Acconeer SDK outside the crate, and
+  `rss/lib` as a library location, from PR #18. `ACC_RSS_LIBS` is kept as an alias of `A121_RSS_LIB`.
+
+### Changed
+- The C code (the logging bridge and the stub libraries) is built with the `cc` crate for every
+  target, so `CC_<target>`, `CFLAGS_<target>` and `AR_<target>` apply. Without `CC_<target>`, the
+  build looks for `arm-none-eabi-gcc`, `riscv32-esp-elf-gcc`, `riscv32-unknown-elf-gcc` or
+  `xtensa-esp32*-elf-gcc` as the target needs.
+- The build reruns when the headers or the `BINDGEN_EXTRA_CLANG_ARGS*`, `CC_<target>`,
+  `A121_RSS_LIB`, `A121_RSS_INCLUDE` or `ACC_RSS_LIBS` variables change.
+- An `ACC_RSS_LIBS` or `A121_RSS_LIB` pointing at a missing directory is an error instead of being
+  skipped for the default locations.
+- `max_align_t` is no longer generated. clang aligns it to 16 bytes on riscv32, which no Rust type
+  matches, so its layout test failed.
+- CI installs Ubuntu's `gcc-arm-none-eabi` instead of the 2020 Arm toolchain, and checks
+  `thumbv8m.main-none-eabihf`.
+
+### Fixed
+- Stub libraries for targets other than Arm and ESP-IDF RISC-V were built with the host compiler,
+  so they could not be linked.
+
 ## [0.8.0] - 2026-10-27
 
 ### Changed

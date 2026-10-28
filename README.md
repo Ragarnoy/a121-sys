@@ -29,30 +29,46 @@ presence = []
 
 ## Dependencies
 
-- Acconeer A121 Static Library must be accessible in your build environment.
-- `arm-none-eabi-gcc` is required for building the C wrapper for some examples.
+- The Acconeer A121 static libraries, from the same SDK version as the bindings.
+- A C cross compiler for the target, which builds the logging bridge and provides the C library
+  headers bindgen needs, and libclang for bindgen.
+
+| Target | C compiler | Notes |
+|---|---|---|
+| `thumbv7em-none-eabihf` (Cortex-M4F) | `arm-none-eabi-gcc` | Ubuntu: `apt install gcc-arm-none-eabi libnewlib-arm-none-eabi` |
+| `thumbv8m.main-none-eabihf` (Cortex-M33) | `arm-none-eabi-gcc` | |
+| `riscv32imac-esp-espidf`, `riscv32imc-esp-espidf` | `riscv32-esp-elf-gcc` | Source the ESP-IDF `export.sh` |
+| `riscv32imac-unknown-none-elf`, `riscv32imc-unknown-none-elf` | `riscv32-esp-elf-gcc` or `riscv32-unknown-elf-gcc` | Needs newlib headers |
+| `xtensa-esp32s3-none-elf`, `-esp32s2-`, `-esp32-` | `xtensa-esp32s3-elf-gcc` etc. | Install with [espup](https://github.com/esp-rs/espup) and `source ~/export-esp.sh`, which also provides the libclang that knows Xtensa |
+
+Set `CC_<target>` to use another compiler. The build reads the include paths from the compiler,
+so no `BINDGEN_EXTRA_CLANG_ARGS` are needed.
+
+## SDK location
+
+Point `A121_RSS_LIB` (or `ACC_RSS_LIBS`) at the directory holding `libacconeer_a121.a` and the
+detector libraries:
 
 ```bash
-# Ubuntu
-sudo apt-get install gcc-arm-none-eabi
+export A121_RSS_LIB=/path/to/a121-v1.13.0/lib
+cargo build --target thumbv7em-none-eabihf
 ```
 
-ESP targets require ESP toolchains, install via the VSCode extension from espressif.
-Before you can build a121-sys, you need to set the environment variables by sourcing the applicable SDK, i.e.:
-```
-. ~/esp/v5.2.3/esp-idf/export.sh
-```
-Then make sure that the following gives you the correct sysroot path:
-```
-riscv32-esp-elf-gcc -print-sysroot
-```
+Without it, the build looks in `rss/lib`, `libs`, `staticlibs`, `../libs`, `/usr/local/lib/acconeer`
+and `/usr/lib/acconeer`. The bindings are generated from the headers in this crate's `rss/include`;
+set `A121_RSS_INCLUDE` to use another SDK's `include` directory, which must be from the same SDK
+version.
+
+With the `stub_library` feature, the crate builds and links against generated stubs instead, for
+tests and CI without the Acconeer libraries.
 
 ## Supported Targets
 
-Support is dependent on the Acconeer A121 Static Library's availability:
+Support depends on Acconeer providing static libraries for the target:
 
-- arm-none-eabihf (gcc, armcc, armclang)
-- esp riscv
+- `thumbv7em-none-eabihf`: Cortex-M4F, e.g. STM32L4
+- `thumbv8m.main-none-eabihf`: Cortex-M33, e.g. STM32WBA65
+- ESP RISC-V and Xtensa, with ESP-IDF or bare metal (esp-hal)
 
 ## Getting Started
 
