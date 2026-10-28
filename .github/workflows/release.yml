@@ -8,7 +8,6 @@ on:
 env:
   CARGO_TERM_COLOR: always
   ACC_RSS_LIBS: "/home/runner/work/a121-sys/a121-sys/staticlibs"
-  CPATH: "/usr/arm-none-eabi/include"
 
 jobs:
   publish:
@@ -23,25 +22,17 @@ jobs:
         with:
           targets: thumbv7em-none-eabihf
 
-      - name: Install ARM toolchain
-        uses: carlosperate/arm-none-eabi-gcc-action@v1
-        with:
-          release: '9-2020-q2'
-
-      - name: Install LLVM and Clang
+      - name: Install the Arm toolchain
+        timeout-minutes: 10
         run: |
-          sudo apt-get update
-          sudo apt-get install -y llvm-14-dev libclang-14-dev clang-14
+          # Skip rebuilding the man page index, which makes installs slow on the runners.
+          # A short timeout retries stalled mirror downloads instead of waiting on them.
+          sudo rm -f /var/lib/man-db/auto-update
+          sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=20 update
+          sudo apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=20 install -y --no-install-recommends gcc-arm-none-eabi libnewlib-arm-none-eabi
 
       - name: Create lib directory
         run: mkdir -p "$ACC_RSS_LIBS"
-
-      # Setup correct paths
-      - name: Setup ARM GCC paths
-        run: |
-          GCC_ARM_PATH=$(dirname $(dirname $(which arm-none-eabi-gcc)))
-          echo "ARM_GCC_PATH=${GCC_ARM_PATH}" >> $GITHUB_ENV
-          echo "CPATH=${GCC_ARM_PATH}/arm-none-eabi/include:${GCC_ARM_PATH}/lib/gcc/arm-none-eabi/9.2.1/include" >> $GITHUB_ENV
 
       # Generate Cargo.lock
       - name: Generate Cargo.lock
@@ -49,15 +40,6 @@ jobs:
         env:
           CC_thumbv7em_none_eabihf: arm-none-eabi-gcc
           AR_thumbv7em_none_eabihf: arm-none-eabi-ar
-
-      - name: Debug information
-        run: |
-          echo "ARM_GCC_PATH=$ARM_GCC_PATH"
-          echo "CPATH=$CPATH"
-          ls -la "$ARM_GCC_PATH/arm-none-eabi/include" || true
-          ls -la "$ARM_GCC_PATH/lib/gcc/arm-none-eabi/9.2.1/include" || true
-          which arm-none-eabi-gcc
-          arm-none-eabi-gcc -print-sysroot
 
       - name: Verify tag version matches Cargo.toml
         run: |
